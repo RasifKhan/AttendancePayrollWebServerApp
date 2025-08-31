@@ -1,0 +1,85 @@
+﻿@using AttendancePayrollWebServerApp.Service
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (IsAuthorized)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public string Module { get; set; } = string.Empty;
+    [Parameter] public string Permission { get; set; } = UserPolicy.VIEW_PRODUCT;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool IsAuthorized { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Option 1: Use a policy name that combines module and permission
+            var policyName = $"{Module}_{Permission}";
+            var authResult = await AuthorizationService.AuthorizeAsync(user, policyName);
+            IsAuthorized = authResult.Succeeded;
+        }
+
+        StateHasChanged();
+    }
+}
+
+
+
+@* very old code *@
+
+
+
+@* @using AttendancePayrollWebServerApp.Service
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (IsAuthorized)
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public string Module { get; set; } = string.Empty;
+    [Parameter] public string Permission { get; set; } = UserPolicy.VIEW_PRODUCT;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool IsAuthorized { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var requirement = new ModuleRequirement(Module, Permission);
+            var authResult = await AuthorizationService.AuthorizeAsync(user, requirement);
+            IsAuthorized = authResult.Succeeded;
+        }
+
+        StateHasChanged();
+    }
+}
+
+ *@
+
+
+
+@* <h3>AuthorizeComponent</h3>
+
+@code {
+
+}
+ *@

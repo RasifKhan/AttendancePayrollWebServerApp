@@ -1,0 +1,264 @@
+﻿@page "/categorypage"
+@using AttendancePayrollWebServerApp.Helper
+@inject CategoryGateway _categoryGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+@* 
+@attribute [Authorize(Roles = rr)] *@
+@* @attribute [Authorize(Roles = )] *@
+
+
+@* @attribute [Authorize(Roles = SD.Role_SuperAdmin)] *@
+
+
+
+@* @attribute [Authorize(Policy = "Role_SuperAdmin")] *@
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0">
+          <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Category</h3>
+        @if (title != "Create")
+        {
+                                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                        style="outline: none; width:auto;">
+                                    Add New Category
+                                </button>
+        }
+                  </div>
+
+              <div class="col-10"  >
+                  <EditForm Model="@category" OnValidSubmit="@UpsertCategory">
+                    <DataAnnotationsValidator /> 
+                   <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+                        <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Category Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="category.CategoryName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>category.CategoryName"></ValidationMessage>
+                                </div>
+                           </div>
+                     @* <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>   *@
+                </div>
+                </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           </EditForm> 
+    </div>
+</div>
+
+
+<div class="row my-1"> 
+    @if (categories != null && categories.Any())
+    {
+                                <DxGrid @ref="GridExp"
+                                Data="@categories"
+                                
+                                ShowGroupPanel="true"
+                                ShowFilterRow="true"
+                                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                PageSize="8" 
+                                PagerPosition="GridPagerPosition.Bottom"
+                                TextWrapEnabled="false"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowSearchBox="true"
+                                AutoExpandAllGroupRows="true"
+                                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                RowClick="OnRowClick"
+                               >
+                             <Columns >
+                                    <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                        <DxGridDataColumn Caption="Category Name" FieldName="CategoryName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                            </Columns>
+                                    <TotalSummary>
+                                        <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="CategoryName" />
+                                    </TotalSummary>
+                            </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                               <div class="text-center">
+                                @*  <img src="/images/Glass spheres.gif"> *@ 
+                                @* <img src="/images/Animation3.gif"> *@
+                                  <img src="@($"{baseUrl}/images/Animation3.gif")">
+                               </div>
+        }
+        else
+        {
+            //no records
+                                   <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Category> categories = new List<Category>();
+
+
+    // string s = SessionHelper.CurrentUser.UserName;
+
+    private Category category { get; set; } = new Category();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+
+
+    
+    //string rr;
+
+    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+
+            // string u = SessionHelper.CurrentUser.UserName;
+            // int  r = SessionHelper.CurrentUser.RoleId;
+            // rr=r.ToString();
+
+            await LoadCategory();
+        }
+    }
+
+    private async Task LoadCategory()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        categories = await _categoryGateway.GetCategoryList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadCategoryById()
+    {
+        StateHasChanged();
+        category = await _categoryGateway.GetCategory(tempId);
+        category.CategoryName = category.CategoryName;
+        StateHasChanged();
+    }
+
+    private async Task UpsertCategory()
+    {
+        bool isExist = await _categoryGateway.IsExist(category.CategoryName, category.CategoryId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Category name already exists");
+            return;
+        }
+
+        if (title == "Create")
+        {
+            category = new Category
+                {
+                    CategoryName = category.CategoryName
+                };
+            await _categoryGateway.Save(category);
+            categories.Add(category);
+            await _jsRuntime.ToastrSuccess("Category Created Successfully");
+            await LoadCategory();
+            await LoadCategoryById();
+            ResetData();
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the category if confirmed
+                category = new Category
+                    {
+                        CategoryId = tempId,
+                        CategoryName = category.CategoryName
+                    };
+                await _categoryGateway.Edit(category);
+                categories.Add(category);
+                await LoadCategory();
+                await _jsRuntime.ToastrSuccess("Category Updated Successfully");
+            }
+            else
+            {
+                await LoadCategory();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        category = new Category();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadCategory();
+
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as Category;
+        if (item != null)
+        {
+            tempId = item.CategoryId;
+        }
+
+        title = "Update";
+        await LoadCategoryById();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

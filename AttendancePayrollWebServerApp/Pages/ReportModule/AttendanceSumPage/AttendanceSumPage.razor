@@ -1,0 +1,257 @@
+﻿@page "/attendancesumpage"
+@inject IJSRuntime js
+@inject DepartmentGateway _departmentGateway
+@inject NavigationManager _navigation
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomGridHeightwidth.css")">
+
+<h3>Attendance Summary Report</h3>
+<div class="form-group">
+    <label for="fromDate">From Datee:</label>
+    <div style="width:50%">
+        <input type="date" id="fromDate" class="form-control @(isFromDateValid ? "" : "is-invalid")" @bind="FromDate"
+               @bind:event="oninput" @onchange="ValidateFromDate" />
+        @if (!isFromDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+
+    <label for="toDate">To Date:</label>
+    <div style="width:50%">
+        <input type="date" id="toDate" class="form-control @(isToDateValid ? "" : "is-invalid")" @bind="ToDate"
+               @bind:event="oninput" @onchange="ValidateToDate" />
+        @if (!isToDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+
+  @*   devEx test *@
+  @*   devEx test *@
+
+
+    <DxComboBox Data="departmentList"
+                TextFieldName="@nameof(Department.DepartmentName)"
+                ValueFieldName="@nameof(Department.DepartmentId)"
+                @bind-Value="Value"
+                AllowUserInput="true"></DxComboBox>
+
+
+  @*   devEx test *@
+  @*   devEx test *@
+
+
+
+
+
+
+</div>
+
+
+<br />
+
+
+
+<div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; font-family: Arial, sans-serif;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+       
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="AllEmployee"
+                       checked="@(selectedOption == "Department")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Department</h4>
+            </div>
+        </div>
+
+
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Late"
+                       checked="@(selectedOption == "Section")"
+                       @onchange="OnOptionChanged" 
+                        />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Section</h4>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+
+<br>
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportPDF">PDF</button>
+@* <button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportXLS">XLS</button> *@
+
+
+@* 
+<button @onclick="() => showModal = true">Show Modal</button>
+@if (showModal)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px;">
+            <p>Hello World</p>
+            <button @onclick="() => showModal = false">Close</button>
+        </div>
+    </div>
+} *@
+
+
+@code {
+    // private bool isDateValid = true;
+    // private DateTime attendanceDate = DateTime.Today;
+    private string selectedOption { get; set; } = "AllEmployee";
+    private bool isFromDateValid = true;
+    private bool isToDateValid = true;
+    private DateTime FromDate = DateTime.Today;
+    private DateTime ToDate = DateTime.Today;
+    private string baseUrl;
+
+
+    // Dev   Test
+    // Dev   Test
+
+    public List<Department> departmentList { get; set; } = new List<Department>();
+    int Value { get; set; } = 0;
+
+
+    // Dev   Test
+    // Dev   Test
+
+
+
+
+
+    private bool showModal = false;
+
+    public AttendanceSumPage( )
+    {
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigation.BaseUri;
+            departmentList = await _departmentGateway.GetDepartmentsList();
+            StateHasChanged();
+        }
+    }
+
+
+    private void ValidateDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            FromDate == DateTime.MinValue ||
+            FromDate.Year < 1900 ||
+            ToDate == DateTime.MinValue ||
+            ToDate.Year < 1900
+           )
+        {
+            isFromDateValid = false;
+            isToDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+            isToDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    private void OnOptionChanged(ChangeEventArgs e)
+    {
+        selectedOption = e.Value?.ToString() ?? "AllEmployee";
+        // if (selectedOption=="Late")
+        // {
+        //     showModal = true;
+        // }
+        StateHasChanged();
+    }
+
+
+    // private async void OpenReportPDF()
+    // {
+    //     if (selectedOption == "Present")
+    //     {
+    //         string baseUri = _navigation.BaseUri;
+    //         string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Present";
+    //         if (attendanceDate != null) 
+    //         {
+    //             var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+    //             url += $"&attendanceDate={encodedDate}";
+    //         }
+    //         await js.InvokeVoidAsync("open", url, "_blank");
+    //     }
+    // }
+
+
+    private async void OpenReportPDF()
+    {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceSumReport?reportType=1";
+            if (FromDate != null && ToDate != null)
+            {
+            var encodedFromDate = Uri.EscapeDataString(FromDate.ToString("yyyy-MM-dd"));
+            var encodedToDate = Uri.EscapeDataString(ToDate.ToString("yyyy-MM-dd"));
+                // url += $"&attendanceDate={encodedFromDate}";
+                url += $"&fromDate={encodedFromDate}&toDate={encodedToDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+    }
+
+
+    private void ValidateFromDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            FromDate == DateTime.MinValue ||
+            FromDate.Year < 1900)
+        {
+            isFromDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    private void ValidateToDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            ToDate == DateTime.MinValue ||
+            ToDate.Year < 1900)
+        {
+            isToDateValid = false;
+        }
+        else
+        {
+            isToDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+
+
+
+   
+   
+
+}
+
+
+

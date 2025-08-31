@@ -1,0 +1,42 @@
+﻿
+        <div class="sidebar @StateCssClass">
+        <DxTreeView AllowSelectNodes="true" CssClass="app-sidebar">
+            <Nodes>
+                <DxTreeViewNode NavigateUrl="./" Text="Overview" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+                @* <DxTreeViewNode NavigateUrl="grid" Text="Grid" CssClass="@rootNodeCssClass"></DxTreeViewNode> *@
+
+            <DxTreeViewNode NavigateUrl="/categorypage" Text="Category" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/categoryItempage" Text="Category Item" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/companypage" Text="Company" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/dailyprocess" Text="Daily Process" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/departmentpage" Text="Department" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/designationpage" Text="Designation" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/employeelist" Text="Entry Employee" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/leavepage" Text="Entry Leave" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/fixdaypage" Text="Fix Day" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/holidaypage" Text="Holiday" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+
+
+            
+
+            <DxTreeViewNode NavigateUrl="/salarysectionpage" Text="Salary Section" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/sectionpage" Text="Section" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            <DxTreeViewNode NavigateUrl="/shiftpage" Text="Shift" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            
+            
+
+            
+                @*  <DxTreeViewNode NavigateUrl="/shiftlisttest" Text="Shift2" CssClass="@rootNodeCssClass"></DxTreeViewNode> *@
+                @*  <DxTreeViewNode NavigateUrl="/shiftlist2" Text="shiftlist2" CssClass="@rootNodeCssClass"></DxTreeViewNode> *@
+                @*  <DxTreeViewNode NavigateUrl="/grid2" Text="Grid2" CssClass="@rootNodeCssClass"></DxTreeViewNode> *@
+      
+        
+            </Nodes>
+        </DxTreeView>
+        </div>
+
+
+@code {
+    const string rootNodeCssClass = "root-item";
+    [Parameter] public string? StateCssClass { get; set; }
+}

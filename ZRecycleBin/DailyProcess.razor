@@ -1,0 +1,281 @@
+﻿@page "/dailyprocess"
+@using AttendancePayrollWebServerApp.Gateway.GatewayProcess
+@using System.Data.SqlClient
+@inject IConfiguration Configuration
+@inject DailyProcessGateway _dailyProcessGateway
+@inject AttGateway _attGateway
+
+
+<link rel="stylesheet" href="/css/CustomGridHeightwidth.css">
+
+<h3>Daily Process</h3>
+<div class="form-group">
+    <label for="attendanceDate">Attendance Date:</label>
+    <div style="width:50%">
+        <input type="date" id="attendanceDate" class="form-control" @bind="attendanceDate" />
+    </div>
+</div>
+<br />
+<button class="btn btn-primary" @onclick="ExecuteStoredProcedure">Execute Process</button>
+
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header @modalHeaderClass">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+}
+<div>
+    <br />
+ </div>
+
+
+@if(countAttendanceDate>0)
+{
+
+
+@* <div>
+    <h4>Present: @presentEmpCount</h4>  
+    <h4>Absent: @absentEmpCount</h4>
+    <h4>Late: @lateEmpCount</h4>
+    <h4>Leave: @leaveEmpCount</h4>
+    <h4>Total Employee: @totalEmpCount</h4>
+    <h4>Total Male: @totalMaleCount</h4>
+    <h4>Total Female: @totalFemaleCount</h4>
+</div> *@
+
+
+
+
+
+    <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; font-family: Arial, sans-serif;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Total Employee: @totalEmpCount</h4>
+            </div>
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Leave: @leaveEmpCount</h4>
+            </div>
+
+          
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Present: @presentEmpCount</h4>
+            </div>
+
+
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Total Male: @totalMaleCount</h4>
+            </div>
+          
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Absent: @absentEmpCount</h4>
+            </div>
+           
+          
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Total Female: @totalFemaleCount</h4>
+            </div>
+
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #1976d2; margin: 0;">Late: @lateEmpCount</h4>
+            </div>
+           
+
+        </div>
+    </div>
+
+
+
+
+  @*   <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; font-family: Arial, sans-serif;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Total Employee: @totalEmpCount</h4>
+            </div>
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Absent: @absentEmpCount</h4>
+            </div>
+
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Present: @presentEmpCount</h4>
+            </div>
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Late: @lateEmpCount</h4>
+            </div>
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Leave: @leaveEmpCount</h4>
+            </div>
+           
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Total Male: @totalMaleCount</h4>
+            </div>
+            <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h4 style="color: #d32f2f; margin: 0;">Total Female: @totalFemaleCount</h4>
+            </div>
+        </div>
+    </div> *@
+}
+
+
+
+
+
+
+@code {
+    private DateTime attendanceDate = DateTime.Today;
+    private string message = string.Empty;
+    private string modalHeaderClass = string.Empty;
+    private string modalTitle = string.Empty;
+    private bool showModal = false;
+    private bool IsLoading { get; set; }
+
+    private string? presentEmpCount { get; set; }
+    private string? absentEmpCount { get; set; }
+    private string? lateEmpCount { get; set; }
+    private string? leaveEmpCount { get; set; }
+    private string? totalEmpCount { get; set; }
+    private string? totalMaleCount { get; set; }
+    private string? totalFemaleCount { get; set; }
+
+    // IGrid? GridExp { get; set; }
+    private List<Attendance> attendances = new List<Attendance>();
+    private Attendance attendance { get; set; } = new Attendance();
+    private Gateway dbGateway = new Gateway();
+    int countAttendanceDate;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+           
+            StateHasChanged();
+            countAttendanceDate = await _dailyProcessGateway.CountAttenDanceDateByAttDate(attendanceDate);
+            // if (countAttendanceDate >0)
+            // {
+            // }
+            await MethodCollection();
+            StateHasChanged();
+
+        }
+    }
+
+    // private async Task LoadAttendance()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     //  attendances = await _attGateway.GetAttendanceList();
+    //    // countAttendanceDate = await _dailyProcessGateway.CountAttenDanceDateByAttDate(attendanceDate);
+    //     await MethodCollection();
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+    private async Task ExecuteStoredProcedure()
+    {
+        var result = await _dailyProcessGateway.ExecuteDailyProc(attendanceDate);
+        await MethodCollection();
+        countAttendanceDate = await _dailyProcessGateway.CountAttenDanceDateByAttDate(attendanceDate);
+        message = result.Message;
+        modalHeaderClass = result.ModalHeaderClass;
+        modalTitle = result.ModalTitle;
+        showModal = true;
+    }
+
+    private async Task MethodCollection()
+    {
+       // countAttendanceDate = await _dailyProcessGateway.CountAttenDanceDateByAttDate(attendanceDate);
+
+        int x = await _dailyProcessGateway.CountPresentEmpByAttDate(attendanceDate);
+        presentEmpCount = x.ToString();
+        int y = await _dailyProcessGateway.CountAbsentEmpByAttDate(attendanceDate);
+        absentEmpCount = y.ToString();
+        int z = await _dailyProcessGateway.CountLateEmpByAttDate(attendanceDate);
+        lateEmpCount = z.ToString();
+        int j = await _dailyProcessGateway.CountLeaveEmpByAttDate(attendanceDate);
+        leaveEmpCount = j.ToString();
+        int k = await _dailyProcessGateway.CountTotalEmpByAttDate(attendanceDate);
+        totalEmpCount = k.ToString();
+        int m = await _dailyProcessGateway.CountTotalMaleEmpByAttDate(attendanceDate);
+        totalMaleCount = m.ToString();
+        int f = await _dailyProcessGateway.CountTotalFemaleEmpByAttDate(attendanceDate);
+        totalFemaleCount = f.ToString();
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+  
+}
+
+
+
+
+@*
+<div class="dxbl-grid">
+
+    @if (attendances != null && attendances.Any())
+    {
+        <DxGrid @ref="GridExp"
+                Data="@attendances"
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+
+                PageSize="20"
+                PagerPosition="GridPagerPosition.TopAndBottom"
+                PageSizeSelectorVisible="true"
+                PageSizeSelectorItems="@(new int[] {10, 20, 100 })"
+                PageSizeSelectorAllRowsItemVisible="false"
+                ShowSearchBox="true"
+                PagerSwitchToInputBoxButtonCount="10"
+                PagerVisibleNumericButtonCount="10"
+                VirtualScrollingEnabled="true"
+                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                TextWrapEnabled="false">
+
+            <Columns>
+                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                <DxGridDataColumn FieldName="EmployeeId" MinWidth="100" />
+                <DxGridDataColumn FieldName="Status" MinWidth="100" />
+
+
+            </Columns>
+
+        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            <div class="text-center">
+                <img src="/images/Glass spheres.gif">
+            </div>
+        }
+        else
+        {
+            <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+ *@

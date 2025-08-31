@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="AttendanceSumDS" targetNamespace="http://tempuri.org/AttendanceSumDS.xsd" xmlns:mstns="http://tempuri.org/AttendanceSumDS.xsd" xmlns="http://tempuri.org/AttendanceSumDS.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="2" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections>
+          <Connection AppSettingsObjectName="Settings" AppSettingsPropertyName="InventoryWebDbConnectionString" IsAppSettingsProperty="true" Modifier="Assembly" Name="InventoryWebDbConnectionString (Settings)" ParameterPrefix="@" PropertyReference="ApplicationSettings.WinReportRDLC.Properties.Settings.GlobalReference.Default.InventoryWebDbConnectionString" Provider="System.Data.SqlClient" />
+          <Connection ConnectionStringObject="Data Source=ATL-80;Persist Security Info=True;User ID=sa;Password=atl@sql;TrustServerCertificate=True" IsAppSettingsProperty="false" Modifier="Assembly" Name="atl-80.master.dbo" ParameterPrefix="@" Provider="System.Data.SqlClient" />
+          <Connection ConnectionStringObject="Data Source=ATL-80;Initial Catalog=Version3Payroll;Persist Security Info=True;User ID=sa;Password=atl@sql;Encrypt=True;TrustServerCertificate=True" IsAppSettingsProperty="false" Modifier="Assembly" Name="atl-80.Version3Payroll.dbo" ParameterPrefix="@" Provider="System.Data.SqlClient" />
+        </Connections>
+        <Tables>
+          <TableAdapter BaseClass="System.ComponentModel.Component" DataAccessorModifier="AutoLayout, AnsiClass, Class, Public" DataAccessorName="AttendanceSumTableAdapter" GeneratorDataComponentClassName="AttendanceSumTableAdapter" Name="AttendanceSum" UserDataComponentName="AttendanceSumTableAdapter">
+            <MainSource>
+              <DbSource ConnectionRef="atl-80.Version3Payroll.dbo" DbObjectName="Version3Payroll.dbo.AttendanceSummaryView" DbObjectType="View" FillMethodModifier="Public" FillMethodName="Fill" GenerateMethods="Both" GenerateShortCommands="false" GeneratorGetMethodName="GetData" GeneratorSourceName="Fill" GetMethodModifier="Public" GetMethodName="GetData" QueryType="Rowset" ScalarCallRetval="System.Object, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" UseOptimisticConcurrency="false" UserGetMethodName="GetData" UserSourceName="Fill">
+                <SelectCommand>
+                  <DbCommand CommandType="Text" ModifiedByUser="true">
+                    <CommandText>SELECT Id, EmployeeId, EmployeeName, SectionName, DepartmentName, DesignationName, worktype, MAttStr, FromDate, ToDate, MonthDays, WHD, HD, WD, A, L, WHDPL, HDPL, TotalPresent, CL, SL, EL, ML, LWP, OL, TotalLeave, LeaveStr, PayD, 
+                  LHr, LStr, OT, ExtOT, DedOT, TotalOT, Remarks, P, JoinDate
+FROM     AttendanceSummaryView</CommandText>
+                    <Parameters />
+                  </DbCommand>
+                </SelectCommand>
+              </DbSource>
+            </MainSource>
+            <Mappings>
+              <Mapping SourceColumn="Id" DataSetColumn="Id" />
+              <Mapping SourceColumn="MAttStr" DataSetColumn="MAttStr" />
+              <Mapping SourceColumn="FromDate" DataSetColumn="FromDate" />
+              <Mapping SourceColumn="ToDate" DataSetColumn="ToDate" />
+              <Mapping SourceColumn="EmployeeId" DataSetColumn="EmployeeId" />
+              <Mapping SourceColumn="MonthDays" DataSetColumn="MonthDays" />
+              <Mapping SourceColumn="WHD" DataSetColumn="WHD" />
+              <Mapping SourceColumn="HD" DataSetColumn="HD" />
+              <Mapping SourceColumn="WD" DataSetColumn="WD" />
+              <Mapping SourceColumn="P" DataSetColumn="P" />
+              <Mapping SourceColumn="A" DataSetColumn="A" />
+              <Mapping SourceColumn="L" DataSetColumn="L" />
+              <Mapping SourceColumn="WHDPL" DataSetColumn="WHDPL" />
+              <Mapping SourceColumn="HDPL" DataSetColumn="HDPL" />
+              <Mapping SourceColumn="TotalPresent" DataSetColumn="TotalPresent" />
+              <Mapping SourceColumn="CL" DataSetColumn="CL" />
+              <Mapping SourceColumn="SL" DataSetColumn="SL" />
+              <Mapping SourceColumn="EL" DataSetColumn="EL" />
+              <Mapping SourceColumn="ML" DataSetColumn="ML" />
+              <Mapping SourceColumn="LWP" DataSetColumn="LWP" />
+              <Mapping SourceColumn="OL" DataSetColumn="OL" />
+              <Mapping SourceColumn="TotalLeave" DataSetColumn="TotalLeave" />
+              <Mapping SourceColumn="LeaveStr" DataSetColumn="LeaveStr" />
+              <Mapping SourceColumn="PayD" DataSetColumn="PayD" />
+              <Mapping SourceColumn="LHr" DataSetColumn="LHr" />
+              <Mapping SourceColumn="LStr" DataSetColumn="LStr" />
+              <Mapping SourceColumn="OT" DataSetColumn="OT" />
+              <Mapping SourceColumn="ExtOT" DataSetColumn="ExtOT" />
+              <Mapping SourceColumn="DedOT" DataSetColumn="DedOT" />
+              <Mapping SourceColumn="TotalOT" DataSetColumn="TotalOT" />
+              <Mapping SourceColumn="Remarks" DataSetColumn="Remarks" />
+              <Mapping SourceColumn="EmployeeName" DataSetColumn="EmployeeName" />
+              <Mapping SourceColumn="SectionName" DataSetColumn="SectionName" />
+              <Mapping SourceColumn="DepartmentName" DataSetColumn="DepartmentName" />
+              <Mapping SourceColumn="DesignationName" DataSetColumn="DesignationName" />
+              <Mapping SourceColumn="worktype" DataSetColumn="worktype" />
+              <Mapping SourceColumn="JoinDate" DataSetColumn="JoinDate" />
+            </Mappings>
+            <Sources />
+          </TableAdapter>
+        </Tables>
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="AttendanceSumDS" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="AttendanceSumDS" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="AttendanceSumDS">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="AttendanceSum" msprop:Generator_RowEvHandlerName="AttendanceSumRowChangeEventHandler" msprop:Generator_RowDeletedName="AttendanceSumRowDeleted" msprop:Generator_RowDeletingName="AttendanceSumRowDeleting" msprop:Generator_RowEvArgName="AttendanceSumRowChangeEvent" msprop:Generator_TablePropName="AttendanceSum" msprop:Generator_RowChangedName="AttendanceSumRowChanged" msprop:Generator_UserTableName="AttendanceSum" msprop:Generator_RowChangingName="AttendanceSumRowChanging" msprop:Generator_RowClassName="AttendanceSumRow" msprop:Generator_TableClassName="AttendanceSumDataTable" msprop:Generator_TableVarName="tableAttendanceSum">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Id" msdata:ReadOnly="true" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="-1" msdata:AutoIncrementStep="-1" msprop:Generator_ColumnPropNameInTable="IdColumn" msprop:Generator_ColumnPropNameInRow="Id" msprop:Generator_UserColumnName="Id" msprop:Generator_ColumnVarNameInTable="columnId" type="xs:decimal" />
+              <xs:element name="MAttStr" msprop:Generator_ColumnPropNameInTable="MAttStrColumn" msprop:Generator_ColumnPropNameInRow="MAttStr" msprop:Generator_UserColumnName="MAttStr" msprop:Generator_ColumnVarNameInTable="columnMAttStr" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="FromDate" msprop:Generator_ColumnPropNameInTable="FromDateColumn" msprop:Generator_ColumnPropNameInRow="FromDate" msprop:Generator_UserColumnName="FromDate" msprop:Generator_ColumnVarNameInTable="columnFromDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="ToDate" msprop:Generator_ColumnPropNameInTable="ToDateColumn" msprop:Generator_ColumnPropNameInRow="ToDate" msprop:Generator_UserColumnName="ToDate" msprop:Generator_ColumnVarNameInTable="columnToDate" type="xs:dateTime" minOccurs="0" />
+              <xs:element name="EmployeeId" msprop:Generator_ColumnPropNameInTable="EmployeeIdColumn" msprop:Generator_ColumnPropNameInRow="EmployeeId" msprop:Generator_UserColumnName="EmployeeId" msprop:Generator_ColumnVarNameInTable="columnEmployeeId" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="MonthDays" msprop:Generator_ColumnPropNameInTable="MonthDaysColumn" msprop:Generator_ColumnPropNameInRow="MonthDays" msprop:Generator_UserColumnName="MonthDays" msprop:Generator_ColumnVarNameInTable="columnMonthDays" type="xs:decimal" minOccurs="0" />
+              <xs:element name="WHD" msprop:Generator_ColumnPropNameInTable="WHDColumn" msprop:Generator_ColumnPropNameInRow="WHD" msprop:Generator_UserColumnName="WHD" msprop:Generator_ColumnVarNameInTable="columnWHD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="HD" msprop:Generator_ColumnPropNameInTable="HDColumn" msprop:Generator_ColumnPropNameInRow="HD" msprop:Generator_UserColumnName="HD" msprop:Generator_ColumnVarNameInTable="columnHD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="WD" msprop:Generator_ColumnPropNameInTable="WDColumn" msprop:Generator_ColumnPropNameInRow="WD" msprop:Generator_UserColumnName="WD" msprop:Generator_ColumnVarNameInTable="columnWD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="P" msprop:Generator_ColumnPropNameInTable="PColumn" msprop:Generator_ColumnPropNameInRow="P" msprop:Generator_UserColumnName="P" msprop:Generator_ColumnVarNameInTable="columnP" type="xs:decimal" minOccurs="0" />
+              <xs:element name="A" msprop:Generator_ColumnPropNameInTable="AColumn" msprop:Generator_ColumnPropNameInRow="A" msprop:Generator_UserColumnName="A" msprop:Generator_ColumnVarNameInTable="columnA" type="xs:decimal" minOccurs="0" />
+              <xs:element name="L" msprop:Generator_ColumnPropNameInTable="LColumn" msprop:Generator_ColumnPropNameInRow="L" msprop:Generator_UserColumnName="L" msprop:Generator_ColumnVarNameInTable="columnL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="WHDPL" msprop:Generator_ColumnPropNameInTable="WHDPLColumn" msprop:Generator_ColumnPropNameInRow="WHDPL" msprop:Generator_UserColumnName="WHDPL" msprop:Generator_ColumnVarNameInTable="columnWHDPL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="HDPL" msprop:Generator_ColumnPropNameInTable="HDPLColumn" msprop:Generator_ColumnPropNameInRow="HDPL" msprop:Generator_UserColumnName="HDPL" msprop:Generator_ColumnVarNameInTable="columnHDPL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalPresent" msprop:Generator_ColumnPropNameInTable="TotalPresentColumn" msprop:Generator_ColumnPropNameInRow="TotalPresent" msprop:Generator_UserColumnName="TotalPresent" msprop:Generator_ColumnVarNameInTable="columnTotalPresent" type="xs:decimal" minOccurs="0" />
+              <xs:element name="CL" msprop:Generator_ColumnPropNameInTable="CLColumn" msprop:Generator_ColumnPropNameInRow="CL" msprop:Generator_UserColumnName="CL" msprop:Generator_ColumnVarNameInTable="columnCL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="SL" msprop:Generator_ColumnPropNameInTable="SLColumn" msprop:Generator_ColumnPropNameInRow="SL" msprop:Generator_UserColumnName="SL" msprop:Generator_ColumnVarNameInTable="columnSL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="EL" msprop:Generator_ColumnPropNameInTable="ELColumn" msprop:Generator_ColumnPropNameInRow="EL" msprop:Generator_UserColumnName="EL" msprop:Generator_ColumnVarNameInTable="columnEL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ML" msprop:Generator_ColumnPropNameInTable="MLColumn" msprop:Generator_ColumnPropNameInRow="ML" msprop:Generator_UserColumnName="ML" msprop:Generator_ColumnVarNameInTable="columnML" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LWP" msprop:Generator_ColumnPropNameInTable="LWPColumn" msprop:Generator_ColumnPropNameInRow="LWP" msprop:Generator_UserColumnName="LWP" msprop:Generator_ColumnVarNameInTable="columnLWP" type="xs:decimal" minOccurs="0" />
+              <xs:element name="OL" msprop:Generator_ColumnPropNameInTable="OLColumn" msprop:Generator_ColumnPropNameInRow="OL" msprop:Generator_UserColumnName="OL" msprop:Generator_ColumnVarNameInTable="columnOL" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalLeave" msprop:Generator_ColumnPropNameInTable="TotalLeaveColumn" msprop:Generator_ColumnPropNameInRow="TotalLeave" msprop:Generator_UserColumnName="TotalLeave" msprop:Generator_ColumnVarNameInTable="columnTotalLeave" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LeaveStr" msprop:Generator_ColumnPropNameInTable="LeaveStrColumn" msprop:Generator_ColumnPropNameInRow="LeaveStr" msprop:Generator_UserColumnName="LeaveStr" msprop:Generator_ColumnVarNameInTable="columnLeaveStr" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="PayD" msprop:Generator_ColumnPropNameInTable="PayDColumn" msprop:Generator_ColumnPropNameInRow="PayD" msprop:Generator_UserColumnName="PayD" msprop:Generator_ColumnVarNameInTable="columnPayD" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LHr" msprop:Generator_ColumnPropNameInTable="LHrColumn" msprop:Generator_ColumnPropNameInRow="LHr" msprop:Generator_UserColumnName="LHr" msprop:Generator_ColumnVarNameInTable="columnLHr" type="xs:decimal" minOccurs="0" />
+              <xs:element name="LStr" msprop:Generator_ColumnPropNameInTable="LStrColumn" msprop:Generator_ColumnPropNameInRow="LStr" msprop:Generator_UserColumnName="LStr" msprop:Generator_ColumnVarNameInTable="columnLStr" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="OT" msprop:Generator_ColumnPropNameInTable="OTColumn" msprop:Generator_ColumnPropNameInRow="OT" msprop:Generator_UserColumnName="OT" msprop:Generator_ColumnVarNameInTable="columnOT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="ExtOT" msprop:Generator_ColumnPropNameInTable="ExtOTColumn" msprop:Generator_ColumnPropNameInRow="ExtOT" msprop:Generator_UserColumnName="ExtOT" msprop:Generator_ColumnVarNameInTable="columnExtOT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="DedOT" msprop:Generator_ColumnPropNameInTable="DedOTColumn" msprop:Generator_ColumnPropNameInRow="DedOT" msprop:Generator_UserColumnName="DedOT" msprop:Generator_ColumnVarNameInTable="columnDedOT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="TotalOT" msprop:Generator_ColumnPropNameInTable="TotalOTColumn" msprop:Generator_ColumnPropNameInRow="TotalOT" msprop:Generator_UserColumnName="TotalOT" msprop:Generator_ColumnVarNameInTable="columnTotalOT" type="xs:decimal" minOccurs="0" />
+              <xs:element name="Remarks" msprop:Generator_ColumnPropNameInTable="RemarksColumn" msprop:Generator_ColumnPropNameInRow="Remarks" msprop:Generator_UserColumnName="Remarks" msprop:Generator_ColumnVarNameInTable="columnRemarks" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="100" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="EmployeeName" msprop:Generator_UserColumnName="EmployeeName" msprop:Generator_ColumnPropNameInTable="EmployeeNameColumn" msprop:Generator_ColumnPropNameInRow="EmployeeName" msprop:Generator_ColumnVarNameInTable="columnEmployeeName" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="SectionName" msprop:Generator_UserColumnName="SectionName" msprop:Generator_ColumnPropNameInTable="SectionNameColumn" msprop:Generator_ColumnPropNameInRow="SectionName" msprop:Generator_ColumnVarNameInTable="columnSectionName">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="DepartmentName" msprop:Generator_UserColumnName="DepartmentName" msprop:Generator_ColumnPropNameInTable="DepartmentNameColumn" msprop:Generator_ColumnPropNameInRow="DepartmentName" msprop:Generator_ColumnVarNameInTable="columnDepartmentName">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="DesignationName" msprop:Generator_UserColumnName="DesignationName" msprop:Generator_ColumnPropNameInTable="DesignationNameColumn" msprop:Generator_ColumnPropNameInRow="DesignationName" msprop:Generator_ColumnVarNameInTable="columnDesignationName">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="worktype" msprop:Generator_UserColumnName="worktype" msprop:Generator_ColumnPropNameInTable="worktypeColumn" msprop:Generator_ColumnPropNameInRow="worktype" msprop:Generator_ColumnVarNameInTable="columnworktype" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="50" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="JoinDate" msprop:Generator_ColumnPropNameInRow="JoinDate" msprop:Generator_ColumnPropNameInTable="JoinDateColumn" msprop:Generator_ColumnVarNameInTable="columnJoinDate" msprop:Generator_UserColumnName="JoinDate" type="xs:dateTime" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:AttendanceSum" />
+      <xs:field xpath="mstns:Id" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>

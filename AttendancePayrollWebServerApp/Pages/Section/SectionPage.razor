@@ -1,0 +1,272 @@
+﻿@page "/sectionpage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@inject SectionGateway _sectionModelGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+<div class="row my-0">
+           <div class="d-flex justify-content-between align-items-start" style="height:5% ; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Section</h3>
+        @if (title != "Create")
+        {
+                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                      style="outline: none; width:auto;">
+                Add New Section
+                      </button>
+        }
+        </div>
+
+              <div class="col-10"  >
+                  <EditForm Model="@sectionModel" OnValidSubmit="@UpsertSection">
+                    <DataAnnotationsValidator /> 
+                    <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+                        <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Section Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="sectionModel.SectionName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>sectionModel.SectionName"></ValidationMessage>
+                                </div>
+                           </div>
+
+                           <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Bangla </div>
+                               <div class="col-9">
+                            <InputText @bind-Value="sectionModel.SectionNameBan"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>sectionModel.SectionNameBan"></ValidationMessage>
+                                </div>
+                           </div>
+
+                    @*  <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>   *@
+                     </div>
+                </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+<div  class="row my-1">
+
+    @if (sectionList != null && sectionList.Any())
+    {
+                                    <DxGrid @ref="GridExp"
+                                        Data="@sectionList"
+
+                                    ShowGroupPanel="true"
+                                    ShowFilterRow="true"
+                                    ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                    PageSizeSelectorVisible="true"
+                                    PageSizeSelectorAllRowsItemVisible="true"
+                                    PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                    PageSize="8" 
+                                    PagerPosition="GridPagerPosition.Bottom"
+                                    TextWrapEnabled="false"
+                                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                    ShowSearchBox="true"
+                                    AutoExpandAllGroupRows="true"
+                                    GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                    SelectionMode="GridSelectionMode.Multiple"
+                                    SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                    FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                    RowClick="OnRowClick"
+                                   >
+                                 <Columns >
+                                        <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                                <DxGridDataColumn Caption="Section Name" FieldName="SectionName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                                    <DxGridDataColumn Caption="Bangla" FieldName="SectionNameBan" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                </Columns>
+                                        <TotalSummary>
+                                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="SectionName" />
+                                        </TotalSummary>
+                                </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                                        <div class="text-center">
+                                               @*  <img src="/images/Glass spheres.gif"> *@
+                                                    <img src="@($"{baseUrl}/images/Animation3.gif")">
+                                        </div>
+        }
+        else
+        {
+        //no records
+                                           <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+
+
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Section> sectionList = new List<Section>();
+
+    private Section sectionModel { get; set; } = new Section();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private string baseUrl;
+
+    IGrid? GridExp { get; set; } 
+
+    //IEnumerable<IGrid> GridExp = new IEnumerable<IGrid>();
+    //IGrid GridExp { get; set; } = GridEditNewRowPosition.Bottom;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadSection();
+        }
+    }
+
+    private async Task LoadSection()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        sectionList = await _sectionModelGateway.GetSectionList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadSectionId()
+    {
+        StateHasChanged();
+        sectionModel = await _sectionModelGateway.GetSection(tempId);
+        sectionModel.SectionName = sectionModel.SectionName;
+        sectionModel.SectionNameBan = sectionModel.SectionNameBan;
+        StateHasChanged();
+    }
+
+    private async Task UpsertSection()
+    {
+       bool isExist = await _sectionModelGateway.IsExist(sectionModel.SectionName,sectionModel.SectionId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Section name already exists");
+            return;
+        }
+
+        if (title == "Create")
+        {
+            sectionModel = new Section
+                {
+                    SectionName = sectionModel.SectionName,
+                    SectionNameBan = sectionModel.SectionNameBan
+                  
+                };
+            await _sectionModelGateway.Save(sectionModel);
+            sectionList.Add(sectionModel);
+            await _jsRuntime.ToastrSuccess("Section Created Successfully");
+            await LoadSection();
+            await LoadSectionId();
+            ResetData();
+        }
+
+    
+        if (title == "Update")
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the sectionModel if confirmed
+                sectionModel = new Section
+                    {
+                        SectionId=tempId,
+                        SectionName = sectionModel.SectionName,
+                        SectionNameBan = sectionModel.SectionNameBan
+                        
+                    };
+                await _sectionModelGateway.Edit(sectionModel);
+                sectionList.Add(sectionModel);
+                await LoadSection();
+                await _jsRuntime.ToastrSuccess("Section Updated Successfully");
+            }
+            else
+            {
+                await LoadSection();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        sectionModel = new Section();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadSection();
+        //await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+
+
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as Section;
+        if (item != null)
+        {
+            tempId = item.SectionId;
+        }
+
+        title = "Update";
+        await LoadSectionId();
+    }
+
+
+
+
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

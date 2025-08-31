@@ -1,0 +1,320 @@
+﻿@page "/leavepage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "leavepage_Access")]
+
+@inject LeaveGateway _leaveGateway
+@inject EmployeeGateway _employeeGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@inject IUserPermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0" style="height:5% ; width: 100% ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Leave </h3>
+        @if (title != "Entry")
+        {
+            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                    style="outline: none; width:auto;" disabled="@(!canAdd)">
+                Add New Leave
+            </button>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button -->
+        <button type="button" class="btn btn-success" @onclick="SaveLeave" disabled="@(!canAdd)">
+            Save Leave
+        </button>
+
+        <!-- Edit Button -->
+        <button type="button" class="btn btn-warning" @onclick="EditLeave" disabled="@(!canEdit)">
+            Edit Leave
+        </button>
+
+        <!-- Delete Button -->
+        <button type="button" class="btn btn-danger" @onclick="DeleteLeave" disabled="@(!canDelete)">
+            Delete Leave
+        </button>
+
+        <!-- Read-only content -->
+        <div class="mt-3">
+            <p>Leave information display area...</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string baseUrl = string.Empty;
+    private string title = "Entry";
+    private bool canAdd = false;
+    private bool canEdit = false;
+    private bool canDelete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = _navigationManager.BaseUri;
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            _navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim != null)
+        {
+            var userId = userIdClaim.Value;
+            canAdd = await PermissionService.HasPermissionAsync(userId, "leavepage", UserPolicy.ADD_PRODUCT);
+            canEdit = await PermissionService.HasPermissionAsync(userId, "leavepage", UserPolicy.EDIT_PRODUCT);
+            canDelete = await PermissionService.HasPermissionAsync(userId, "leavepage", UserPolicy.DELETE_PRODUCT);
+        }
+    }
+
+    private async Task AddNew()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "leavepage", UserPolicy.ADD_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to add a leave.");
+            return;
+        }
+        // Add new leave logic
+    }
+
+    private async Task SaveLeave()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "leavepage", UserPolicy.ADD_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to save a leave.");
+            return;
+        }
+        // Save leave logic
+    }
+
+    private async Task EditLeave()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "leavepage", UserPolicy.EDIT_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to edit a leave.");
+            return;
+        }
+        // Edit leave logic
+    }
+
+    private async Task DeleteLeave()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "leavepage", UserPolicy.DELETE_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to delete a leave.");
+            return;
+        }
+        // Delete leave logic
+    }
+}
+
+@* @page "/leavepage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "leavepage_Access")]
+
+@inject LeaveGateway _leaveGateway
+@inject EmployeeGateway _employeeGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@inject IUserPermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0" style="height:5% ; width: 100% ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Leave </h3>
+
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.ADD_PRODUCT">
+            @if (title != "Entry")
+            {
+                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                        style="outline: none; width:auto;">
+                    Add New Leave
+                </button>
+            }
+        </AuthorizeComponent>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-success" @onclick="SaveLeave">
+                Save Leave
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Edit Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.EDIT_PRODUCT">
+            <button type="button" class="btn btn-warning" @onclick="EditLeave">
+                Edit Leave
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Delete Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.DELETE_PRODUCT">
+            <button type="button" class="btn btn-danger" @onclick="DeleteLeave">
+                Delete Leave
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Read-only content -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.VIEW_PRODUCT">
+            <div class="mt-3">
+                <p>Leave information display area...</p>
+            </div>
+        </AuthorizeComponent>
+    </div>
+</div>
+
+@code {
+    private string baseUrl = string.Empty;
+    private string title = "Entry";
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = _navigationManager.BaseUri;
+    }
+
+    private async Task AddNew()
+    {
+        // Add new leave logic
+        // Ensure user has ADD_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task SaveLeave()
+    {
+        // Save leave logic
+        // Ensure user has ADD_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task EditLeave()
+    {
+        // Edit leave logic
+        // Ensure user has EDIT_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task DeleteLeave()
+    {
+        // Delete leave logic
+        // Ensure user has DELETE_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+}
+
+ *@
+
+
+
+@* @page "/leavepage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "leavepage_Access")]
+
+@inject LeaveGateway _leaveGateway
+@inject EmployeeGateway _employeeGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@inject IUserPermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0" style="height:5% ; width: 100% ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Leave </h3>
+
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.ADD_PRODUCT">
+            @if (title != "Entry")
+            {
+                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                        style="outline: none; width:auto;">
+                    Add New Leave
+                </button>
+            }
+        </AuthorizeComponent>
+    </div>
+</div>
+
+<!-- Your existing leave page content -->
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-success" @onclick="SaveLeave">
+                Save Leave
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Edit Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.EDIT_PRODUCT">
+            <button type="button" class="btn btn-warning" @onclick="EditLeave">
+                Edit Leave
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Delete Button -->
+        <AuthorizeComponent Module="leavepage" Permission="@UserPolicy.DELETE_PRODUCT">
+            <button type="button" class="btn btn-danger" @onclick="DeleteLeave">
+                Delete Leave
+            </button>
+        </AuthorizeComponent>
+    </div>
+</div>
+
+@code {
+    private string baseUrl = string.Empty;
+    private string title = "Entry";
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = _navigationManager.BaseUri;
+    }
+
+    private async Task AddNew()
+    {
+        // Add new leave logic
+    }
+
+    private async Task SaveLeave()
+    {
+        // Save leave logic
+    }
+
+    private async Task EditLeave()
+    {
+        // Edit leave logic
+    }
+
+    private async Task DeleteLeave()
+    {
+        // Delete leave logic
+    }
+} *@

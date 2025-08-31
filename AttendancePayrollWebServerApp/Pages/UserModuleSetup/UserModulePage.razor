@@ -1,0 +1,230 @@
+﻿@page "/usermodule"
+@inject IJSRuntime _jsRuntime
+@inject UserModuleGateway _userModuleGateway
+@inject NavigationManager _navigationManager
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0" style="height:5% ; width: 100% ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title UserModule</h3>
+
+        @if (title != "Create")
+        {
+            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                    style="outline: none; width:auto;">
+                Add New UserModule
+            </button>
+        }
+    </div>
+</div>
+
+
+
+
+
+<div class="row my-0">
+    <div class="col-10">
+        <EditForm Model="@userModule" OnValidSubmit="@UpsertUser">
+            <DataAnnotationsValidator />
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% ">
+
+                   
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Module Name</div>
+                        <div class="col-9">
+                            <InputText @bind-Value="userModule.ModuleName" class="form-control custom-input"></InputText>
+                            <ValidationMessage For="()=>userModule.ModuleName"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Page Name</div>
+                        <div class="col-9">
+                            <InputText @bind-Value="userModule.ModulePageName" class="form-control custom-input"></InputText>
+                            <ValidationMessage For="()=>userModule.ModulePageName"></ValidationMessage>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+
+    private UserModule userModule { get; set; } = new UserModule();
+    private List<UserModule> userModules = new List<UserModule>();
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; }
+
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadUserModule();
+        }
+    }
+
+
+
+    private async Task LoadUserModule()
+    {
+        IsLoading = true;
+        StateHasChanged();
+     //   userRoles = await _userRoleGateway.GetUserRoleList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadUserId()
+    {
+        StateHasChanged();
+        // userModule = await _companyGateway.GetCompany(tempId);
+        // userModule.CompanyName = userModule.CompanyName;
+        // userModule.CompNameBan = userModule.CompNameBan;
+        // userModule.Description = userModule.Description;
+        // userModule.DescriptionBan = userModule.DescriptionBan;
+        // userModule.Contact = userModule.Contact;
+        // userModule.HotLine = userModule.HotLine;
+        // userModule.CompReg = userModule.CompReg;
+
+        StateHasChanged();
+    }
+
+    private async Task UpsertUser()
+    {
+        // bool isExist = await _companyGateway.IsExist(userModule.CompanyName,userModule.CompanyId);
+        // if (isExist)
+        // {
+        //     await _jsRuntime.ToastrError("UserModule name already exists");
+        //     return;
+        // }
+
+        if (title == "Create")
+        {
+            userModule = new UserModule
+                {
+                 
+                    ModuleName = userModule.ModuleName,
+                    ModulePageName = userModule.ModulePageName
+                
+                };
+            await _userModuleGateway.Save(userModule);
+            userModules.Add(userModule);
+            await _jsRuntime.ToastrSuccess("UserModule Created Successfully");
+            await LoadUserModule();
+            await LoadUserId();
+            ResetData();
+        }
+
+
+        // if (title == "Update")
+        // {
+        //     var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+        //     if (confirmed)
+        //     {
+        //         // Update the userModule if confirmed
+        //         userModule = new UserModule
+        //             {
+        //                 UserId = userModule.UserId,
+        //                 UserName = userModule.UserName,
+        //                 UserPassword = userModule.UserPassword,
+        //                 RoleId = userModule.RoleId,
+        //                 Access = userModule.Access,
+        //                 MobileNumber = userModule.MobileNumber,
+        //                 EMail = userModule.EMail,
+        //                 Status = userModule.Status
+        //             };
+        //         //  await _companyGateway.Edit(userModule);
+        //         users.Add(userModule);
+        //         await LoadUserModule();
+        //         await _jsRuntime.ToastrSuccess("UserModule Updated Successfully");
+        //     }
+        //     else
+        //     {
+        //         await LoadUserModule();
+        //     }
+        // }
+    }
+
+    private void ResetData()
+    {
+        userModule = new UserModule();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadUserModule();
+        //await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as UserModule;
+        if (item != null)
+        {
+            tempId = item.ModuleId;
+        }
+
+        title = "Update";
+        await LoadUserId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}
+
+

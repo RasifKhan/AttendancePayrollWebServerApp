@@ -1,0 +1,212 @@
+﻿@page "/testscreenpage"
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="@($"{baseUrl}css/ResponsiveScreen.css")">
+
+ <div >
+    <h2 class="title text-primary ">Employee Information</h2>
+ </div>
+
+<div  id="parent">
+    <div class="div-control">
+        <div class="child">
+            <label for="name">Name Name Name Name: </label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Experience:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+
+        <div class="child">
+            <div class="child">
+                <label for="email">Pay Source:</label>
+                <input type="email" id="email" class="form-control" @bind="email" />
+            </div>
+
+            <div class="child">
+                <label for="email">BGMEAID:</label>
+                <input type="email" id="email" class="form-control" @bind="email" />
+            </div>
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+         <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+         <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+    </div>
+
+
+
+    <div class="div-control">
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+    </div>
+
+    <div class="div-control">
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+
+    </div>
+
+    <div style="width: 100%">
+        <h2 class=" text-primary ">Employee Information</h2>
+    </div>
+
+</div>
+
+
+
+
+
+
+@code
+{
+    private string? name;
+    private string? email;
+    private string? baseUrl;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+        }
+    }
+
+
+
+    private void HandleSubmit()
+    {
+        // Handle the form submission logic
+        Console.WriteLine($"Name: {name}, Email: {email}");
+    }
+}

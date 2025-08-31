@@ -1,0 +1,483 @@
+﻿@page "/employeebankinformationpage"
+@using AttendancePayrollWebServerApp.Helper
+@inject EmployeeBankAccInfoGateway _employeeBankAccInfoGateway
+@inject EmployeeGateway _employeeGateway
+@inject CategoryItemGateway _categoryItemGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+<div class="row my-0" style="height:5%  ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Employee Bank Info</h3>
+        @if (title != "Entry")
+        {
+            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                    style="outline: none; width:auto;">
+                Add New
+            </button>
+        }
+    </div>
+</div>
+
+<div class="row my-0">
+    <div class="col-10">
+        <EditForm Model="@employeeBankAccInfo" OnValidSubmit="@UpsertEmpBankAcc">
+            <DataAnnotationsValidator />
+            <div class="row" style="width: 120% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:46%">
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Emlployee Id</div>
+                        <div class="col-9">
+
+                            @if (title == "Entry")
+                            {
+                                <InputSelect @bind-Value="employeeBankAccInfo.EmployeeId" class="form-select custom-input light-violet">
+                                    <option value="0" disabled="disabled" selected>-- Select Employee Id --</option>
+                                    @foreach (var items in employees)
+                                    {
+                                        <option value="@items.EmployeeId">@items.EmployeeId</option>
+                                    }
+                                </InputSelect>
+                            }
+                            else
+                            {
+                                <InputText @bind-Value="employeeBankAccInfo.EmployeeId" class="form-control custom-input" style="background-color: gray;color: white" disabled></InputText>
+                            }
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Bank</div>
+                        <div class="col-9">
+                            @if (title == "Entry")
+                            {
+                                <InputSelect TValue="int"
+                                             Value="employeeBankAccInfo.BankCatItemId"
+                                             ValueChanged="@(value => OnBankCatItemIdChanged(value))"
+                                             ValueExpression="@(() => employeeBankAccInfo.BankCatItemId)"
+                                             class="form-select custom-input light-violet">
+                                    <option value="0" disabled selected>-- Select Bank --</option>
+                                    @foreach (var item in bankCategoryItems)
+                                    {
+                                        <option value="@item.CategoryItemId">@item.CategoryItemName</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => employeeBankAccInfo.BankCatItemId)" />
+                            }
+
+                            else
+                            {
+                                <InputSelect TValue="int" style="background-color: gray;color: white" disabled
+                                             Value="employeeBankAccInfo.BankCatItemId"
+                                             ValueChanged="@(value => OnBankCatItemIdChanged(value))"
+                                             ValueExpression="@(() => employeeBankAccInfo.BankCatItemId)"
+                                             class="form-select custom-input light-violet">
+                                    <option value="0" disabled selected>-- Select Bank --</option>
+                                    @foreach (var item in bankCategoryItems)
+                                    {
+                                        <option value="@item.CategoryItemId">@item.CategoryItemName</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => employeeBankAccInfo.BankCatItemId)" />
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Branch</div>
+                        <div class="col-9">
+                            @if (title == "Entry")
+                            {
+                                <InputSelect @bind-Value="employeeBankAccInfo.BranchCatItemId" class="form-select custom-input light-violet">
+                                    @foreach (var items in branchCategoryItems)
+                                    {
+                                        <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                    }
+                                </InputSelect>
+                            }
+                            else
+                            {
+                                <InputSelect @bind-Value="employeeBankAccInfo.BranchCatItemId" style="background-color: gray;color: white" disabled
+                                             class="form-select custom-input light-violet">
+
+                                    @foreach (var items in branchCategoryItems)
+                                    {
+                                        <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                    }
+                                </InputSelect>
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Account No</div>
+                        <div class="col-9">
+                            @if (employeeBankAccInfo.Status == "N")
+                            {
+                                <InputText @bind-Value="employeeBankAccInfo.AccNo" class="form-control custom-input" style="background-color: gray;color: white" disabled></InputText>
+
+                            }
+                            else
+                            {
+                                <InputText @bind-Value="employeeBankAccInfo.AccNo" class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>employeeBankAccInfo.AccNo"></ValidationMessage>
+                                @if (employeeBankAccInfo.BankCatItemId == 26 && !string.IsNullOrEmpty(employeeBankAccInfo.AccNo) && employeeBankAccInfo.AccNo.Length != 12)
+                                {
+                                    <div class="text-danger">Account number must be exactly 12 characters for this bank.</div>
+                                }
+                                @if (employeeBankAccInfo.BankCatItemId == 27 && !string.IsNullOrEmpty(employeeBankAccInfo.AccNo) && employeeBankAccInfo.AccNo.Length != 11)
+                                {
+                                    <div class="text-danger">Account number must be exactly 11 characters for this bank.</div>
+                                }
+                                @if (employeeBankAccInfo.BankCatItemId == 28 && !string.IsNullOrEmpty(employeeBankAccInfo.AccNo) && employeeBankAccInfo.AccNo.Length != 11)
+                                {
+                                    <div class="text-danger">Account number must be exactly 11 characters for this bank.</div>
+                                }
+                                @if (employeeBankAccInfo.BankCatItemId == 31 && !string.IsNullOrEmpty(employeeBankAccInfo.AccNo) && employeeBankAccInfo.AccNo.Length != 11)
+                                {
+                                    <div class="text-danger">Account number must be exactly 11 characters for this bank.</div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:4%"></div>
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:46%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Status</div>
+                        <div class="col-9">
+                            <InputSelect @bind-Value="employeeBankAccInfo.Status" class="form-control custom-input">
+                                <option value="0" disabled="disabled" selected>-- Select --</option>
+                                <option value="Y">Y</option>
+                                <option value="N">N</option>
+                            </InputSelect>
+                            @* <ValidationMessage For="()=>employeeBankAccInfo.Remarks"></ValidationMessage> *@
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Remarks</div>
+                        <div class="col-9">
+                            <InputText @bind-Value="employeeBankAccInfo.Remarks" class="form-control custom-input"></InputText>
+                            @* <ValidationMessage For="()=>employeeBankAccInfo.Remarks"></ValidationMessage> *@
+                        </div>
+                    </div>
+                </div>
+
+              @*   <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px">@title</button> *@
+            </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<div class="row my-1">
+    @if (employeeBankAccInfos != null && employeeBankAccInfos.Any())
+    {
+        <DxGrid @ref="GridExp"
+                Data="@employeeBankAccInfos"
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                PageSizeSelectorVisible="true"
+                PageSizeSelectorAllRowsItemVisible="true"
+                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                PageSize="8"
+                CustomizeCellDisplayText="Grid_CustomizeCellDisplayText"
+                PagerPosition="GridPagerPosition.Bottom"
+                TextWrapEnabled="false"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                ShowSearchBox="true"
+                AutoExpandAllGroupRows="true"
+                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                SelectionMode="GridSelectionMode.Multiple"
+                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                RowClick="OnRowClick">
+            <Columns>
+                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Bank" FieldName="BankCatItemId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Branch " FieldName="BranchCatItemId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Acc No" FieldName="AccNo" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Status" FieldName="Status" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Remarks" FieldName="Remarks" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="EmployeeId" />
+            </TotalSummary>
+
+        </DxGrid>
+    }
+
+    else
+    {
+        if (IsLoading)
+        {
+            <div class="text-center">
+                @* <img src="/images/Animation3.gif"> *@
+                <img src="@($"{baseUrl}/images/Animation3.gif")">
+            </div>
+        }
+        else
+        {
+            <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<EmployeeBankAccInfo> employeeBankAccInfos = new List<EmployeeBankAccInfo>();
+    private List<CategoryItem> bankCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> branchCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<Employee> employees = new List<Employee>();
+    int bankCatId = 7;
+    int branchCatId = 8;
+    private int selectedBankCatItemId;
+    private string baseUrl;
+    private void OnBankCatItemIdChanged(int newValue)
+    {
+        employeeBankAccInfo.BankCatItemId = newValue;
+        selectedBankCatItemId = newValue;
+    }
+
+    private EmployeeBankAccInfo employeeBankAccInfo { get; set; } = new EmployeeBankAccInfo();
+    private string title { get; set; } = "Entry";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            employeeBankAccInfo.BranchCatItemId = 23;
+            await LoadEmployeeBankAccInfo();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadEmployeeBankAccInfo()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employeeBankAccInfos = await _employeeBankAccInfoGateway.GetEmployeeBankAccInfoList();
+        employees = await _employeeGateway.GetEmployeeList();
+        var categoryItems = await _categoryItemGateway.GetCategoryItemList();
+        bankCategoryItems = categoryItems.Where(data => data.CategoryId == bankCatId).ToList();
+        branchCategoryItems = categoryItems.Where(data => data.CategoryId == branchCatId).ToList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadEmpBankAccByInfoId()
+    {
+        StateHasChanged();
+        employeeBankAccInfo = await _employeeBankAccInfoGateway.GetEmployeeBankAccInfo(tempId);
+        employeeBankAccInfo.EmployeeId = employeeBankAccInfo.EmployeeId;
+        employeeBankAccInfo.BankCatItemId = employeeBankAccInfo.BankCatItemId;
+        employeeBankAccInfo.BranchCatItemId = employeeBankAccInfo.BranchCatItemId;
+        employeeBankAccInfo.AccNo = employeeBankAccInfo.AccNo;
+        employeeBankAccInfo.Status = employeeBankAccInfo.Status;
+        employeeBankAccInfo.Remarks = employeeBankAccInfo.Remarks;
+        StateHasChanged();
+    }
+
+    private async Task ValidateAccountNumber()
+    {
+        if (employeeBankAccInfo.BankCatItemId == 26)  //Rocket
+        {
+            if (string.IsNullOrEmpty(employeeBankAccInfo.AccNo) || employeeBankAccInfo.AccNo.Length != 12)
+            {
+                await _jsRuntime.ToastrError("Account number must be exactly 12 characters for this bank.");
+                return;
+            }
+        }
+
+        if (employeeBankAccInfo.BankCatItemId == 27)   //Upay
+        {
+            if (string.IsNullOrEmpty(employeeBankAccInfo.AccNo) || employeeBankAccInfo.AccNo.Length != 11)
+            {
+                await _jsRuntime.ToastrError("Account number must be exactly 11 characters for this bank.");
+                return;
+            }
+        }
+
+        if (employeeBankAccInfo.BankCatItemId == 28)   //Bikash
+        {
+            if (string.IsNullOrEmpty(employeeBankAccInfo.AccNo) || employeeBankAccInfo.AccNo.Length != 11)
+            {
+                await _jsRuntime.ToastrError("Account number must be exactly 11 characters for this bank.");
+                return;
+            }
+        }
+
+        if (employeeBankAccInfo.BankCatItemId == 31)   //Nagad
+        {
+            if (string.IsNullOrEmpty(employeeBankAccInfo.AccNo) || employeeBankAccInfo.AccNo.Length != 11)
+            {
+                await _jsRuntime.ToastrError("Account number must be exactly 11 characters for this bank.");
+                return;
+            }
+        }
+    }
+
+    private async Task UpsertEmpBankAcc()
+    {
+
+        await ValidateAccountNumber();
+
+        if (title == "Entry")
+        {
+            bool isExistStatus = await _employeeBankAccInfoGateway.IsExistStatusY(employeeBankAccInfo.EmployeeId, employeeBankAccInfo.BankCatItemId, employeeBankAccInfo.AccNo);
+            if (isExistStatus)
+            {
+                await _jsRuntime.ToastrError("Change Status of Previouse Bank Account");
+                return;
+            }
+
+            bool isExist = await _employeeBankAccInfoGateway.IsExist(employeeBankAccInfo.AccNo, employeeBankAccInfo.InfoId, employeeBankAccInfo.EmployeeId, employeeBankAccInfo.BankCatItemId);
+            if (isExist)
+            {
+                await _jsRuntime.ToastrError("Acc no is already exists");
+                return;
+            }
+            employeeBankAccInfo = new EmployeeBankAccInfo
+                {
+                    EmployeeId = employeeBankAccInfo.EmployeeId,
+                    BankCatItemId = employeeBankAccInfo.BankCatItemId,
+                    BranchCatItemId = employeeBankAccInfo.BranchCatItemId,
+                    AccNo = employeeBankAccInfo.AccNo,
+                    Status = employeeBankAccInfo.Status,
+                    Remarks = employeeBankAccInfo.Remarks
+                };
+            await _employeeBankAccInfoGateway.Save(employeeBankAccInfo);
+            employeeBankAccInfos.Add(employeeBankAccInfo);
+            await _jsRuntime.ToastrSuccess("Created Successfully");
+            await LoadEmployeeBankAccInfo();
+            await LoadEmpBankAccByInfoId();
+            ResetData();
+        }
+
+        else //Update
+        {
+            bool isExistStatusUpdate = await _employeeBankAccInfoGateway.IsExistUpdateStatusY(employeeBankAccInfo.EmployeeId, employeeBankAccInfo.BankCatItemId, employeeBankAccInfo.InfoId, employeeBankAccInfo.Status, employeeBankAccInfo.AccNo, employeeBankAccInfo.Remarks);
+            if (isExistStatusUpdate)
+            {
+                await _jsRuntime.ToastrError("Change Status of Previouse Bank Account");
+                return;
+            }
+
+
+            bool isExist = await _employeeBankAccInfoGateway.IsExist(employeeBankAccInfo.AccNo, employeeBankAccInfo.InfoId, employeeBankAccInfo.EmployeeId, employeeBankAccInfo.BankCatItemId);
+            if (isExist)
+            {
+                await _jsRuntime.ToastrError("Acc no is already exists");
+                return;
+            }
+
+
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                employeeBankAccInfo = new EmployeeBankAccInfo
+                    {
+                        InfoId = tempId,
+                        EmployeeId = employeeBankAccInfo.EmployeeId,
+                        BankCatItemId = employeeBankAccInfo.BankCatItemId,
+                        BranchCatItemId = employeeBankAccInfo.BranchCatItemId,
+                        AccNo = employeeBankAccInfo.AccNo,
+                        Status = employeeBankAccInfo.Status,
+                        Remarks = employeeBankAccInfo.Remarks
+                    };
+                await _employeeBankAccInfoGateway.Edit(employeeBankAccInfo);
+                employeeBankAccInfos.Add(employeeBankAccInfo);
+                await LoadEmployeeBankAccInfo();
+                await _jsRuntime.ToastrSuccess("EmployeeBankAccInfo Updated Successfully");
+            }
+            else
+            {
+                await LoadEmployeeBankAccInfo();
+            }
+        }
+    }
+
+
+    private void ResetData()
+    {
+        employeeBankAccInfo = new EmployeeBankAccInfo();
+        employeeBankAccInfo.BranchCatItemId = 23;   //Notapplicable
+        StateHasChanged();
+    }
+
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Entry";
+        ResetData();
+        await LoadEmployeeBankAccInfo();
+    }
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        var item = e.DataItem as EmployeeBankAccInfo;
+        if (item != null)
+        {
+            tempId = item.InfoId;
+        }
+        title = "Update";
+        await LoadEmpBankAccByInfoId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = true
+            });
+    }
+
+    
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "BankCatItemId")
+        {
+            e.DisplayText = bankCategoryItems.Where(c => c.CategoryItemId == (int)e.Value).First().CategoryItemName;
+        }
+        if (e.FieldName == "BranchCatItemId")
+        {
+            e.DisplayText = branchCategoryItems.Where(c => c.CategoryItemId == (int)e.Value).First().CategoryItemName;
+        }
+    }
+}
+

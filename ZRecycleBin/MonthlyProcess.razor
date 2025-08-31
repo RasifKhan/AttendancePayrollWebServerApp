@@ -1,0 +1,214 @@
+﻿@page "/monthlyprocess"
+@using AttendancePayrollWebServerApp.Gateway
+@using System.Data.SqlClient
+@inject IConfiguration Configuration
+@inject AttendanceGateway _attendanceGateway
+
+<link rel="stylesheet" href="/css/CustomGridHeightwidth.css">
+
+<h3>Monthly Process</h3>
+<div class="form-group">
+    <label for="attendanceDate">From Date:</label>
+    <div style="width:50%">
+        <input type="date" id="attendanceDate" class="form-control @(isFromDateValid ? "" : "is-invalid")" @bind="FromDate"
+               @bind:event="oninput" @onchange="ValidateDate" />
+        @if (!isFromDateValid)
+                {
+                    <div class="invalid-feedback">
+                        Please enter a valid date.
+                    </div>
+                }
+       </div>
+
+
+        <label for="attendanceDate">To Date:</label>
+    <div style="width:50%">
+        <input type="date" id="attendanceDate" class="form-control @(isToDateValid ? "" : "is-invalid")" @bind="ToDate"
+               @bind:event="oninput" @onchange="ValidateDate" />
+        @if (!isToDateValid)
+                {
+                    <div class="invalid-feedback">
+                        Please enter a valid date.
+                    </div>
+                }
+       </div>
+
+
+</div>
+
+
+
+
+
+<br />
+<button class="btn btn-primary" @onclick="ExecuteStoredProcedure">Execute Process</button>
+
+
+
+
+
+
+
+
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header @modalHeaderClass">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+}
+<div>
+    <br />
+ </div>
+
+
+
+@code {
+    private DateTime FromDate = DateTime.Today;
+    private DateTime ToDate = DateTime.Today;
+    private DateTime attendanceDate = DateTime.Today;
+    
+
+    private string message = string.Empty;
+    private string modalHeaderClass = string.Empty;
+    private string modalTitle = string.Empty;
+    private bool showModal = false;
+    private bool IsLoading { get; set; }
+
+    private List<Attendance> attendances = new List<Attendance>();
+    private Attendance attendance { get; set; } = new Attendance();
+    private Gateway dbGateway = new Gateway();
+    int countAttendanceDate;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+          //  countAttendanceDate = await _attendanceGateway.CountAttenDanceDateByAttDate(attendanceDate);
+            StateHasChanged();
+        }
+    }
+
+  
+
+
+    // private async Task ExecuteStoredProcedure()
+    // {
+    //     if (!isFromDateValid && !isToDateValid )
+    //     {
+    //         return;
+    //     }
+
+    //    var result = await _attendanceGateway.ExecuteDailyProc(attendanceDate);
+
+    //    countAttendanceDate = await _attendanceGateway.CountAttenDanceDateByAttDate(attendanceDate);
+    //    message = result.Message;
+    //    modalHeaderClass = result.ModalHeaderClass;
+    //    modalTitle = result.ModalTitle;
+    //    showModal = true;
+    // }
+
+
+
+
+    private async Task ExecuteStoredProcedure()
+    {
+        if (!isFromDateValid || !isToDateValid)
+        {
+            return;
+        }
+
+        attendanceDate = FromDate;
+        List<string> processingMessages = new List<string>();
+
+        while (attendanceDate <= ToDate)
+        {
+            try
+            {
+                var result = await _attendanceGateway.ExecuteDailyProc(attendanceDate);
+                countAttendanceDate = await _attendanceGateway.CountAttenDanceDateByAttDate(attendanceDate);
+
+                // Store messages for each date processed
+                processingMessages.Add($"Date {attendanceDate:dd-MMM-yyyy}: {result.Message}");
+
+                // Move to next date
+                attendanceDate = attendanceDate.AddDays(1);
+            }
+            catch (Exception ex)
+            {
+                // Handle any errors during processing
+                processingMessages.Add($"Error processing {attendanceDate:dd-MMM-yyyy}: {ex.Message}");
+                break;
+            }
+        }
+
+        // Compile final message and show modal
+        message = string.Join("\n", processingMessages);
+        modalHeaderClass = "bg-info"; // You might want to adjust this based on overall success/failure
+        modalTitle = "Batch Processing Results";
+        showModal = true;
+    }
+
+
+
+
+
+
+  
+
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+
+
+    private bool isFromDateValid = true;
+    private void ValidateDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            FromDate == DateTime.MinValue ||
+            FromDate.Year < 1900)
+        {
+            isFromDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    private bool isToDateValid = true;
+    private void ValidateDateTO(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            ToDate == DateTime.MinValue ||
+            ToDate.Year < 1900)
+        {
+            isToDateValid = false;
+        }
+        else
+        {
+            isToDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+
+}
+

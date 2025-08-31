@@ -1,0 +1,261 @@
+﻿@page "/salarysectionpage"
+@using AttendancePayrollWebServerApp.Helper
+@inject SalarySectionGateway _salarySectionGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+
+<div class="row my-0">
+           <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Salary Section</h3>
+        @if (title != "Create")
+        {
+                                    <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                            style="outline: none; width:auto;">
+                                        Add Salary Section
+                                    </button>
+        }
+        </div>
+
+              <div class="col-10"  >
+                  <EditForm Model="@salarySection" OnValidSubmit="@UpsertSalarySection">
+                    <DataAnnotationsValidator /> 
+                    <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+                       
+                       <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="salarySection.SalarySectionName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>salarySection.SalarySectionName"></ValidationMessage>
+                                </div>
+                           </div>
+
+                           <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Bangla </div>
+                               <div class="col-9">
+                            <InputText @bind-Value="salarySection.SalarySectionBan"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>salarySection.SalarySectionBan"></ValidationMessage>
+                                </div>
+                           </div>
+
+                    @*  <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>   *@
+                     </div>
+                </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+<div  class="row my-1">
+
+    @if (salarySections != null && salarySections.Any())
+    {
+                                    <DxGrid @ref="GridExp"
+                                    Data="@salarySections"
+
+                                    ShowGroupPanel="true"
+                                    ShowFilterRow="true"
+                                    ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                    PageSizeSelectorVisible="true"
+                                    PageSizeSelectorAllRowsItemVisible="true"
+                                    PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                    PageSize="8" 
+                                    PagerPosition="GridPagerPosition.Bottom"
+                                    TextWrapEnabled="false"
+                                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                    ShowSearchBox="true"
+                                    AutoExpandAllGroupRows="true"
+                                    GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                    SelectionMode="GridSelectionMode.Multiple"
+                                    SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                    FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                    RowClick="OnRowClick"
+                                   >
+                                 <Columns >
+                                        <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                                <DxGridDataColumn Caption="SalSection Name" FieldName="SalarySectionName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                                            <DxGridDataColumn Caption="Bangla" FieldName="SalarySectionBan" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                </Columns>
+                                        <TotalSummary>
+                                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="SalarySectionName" />
+                                        </TotalSummary>
+                                </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                                        <div class="text-center">
+                                              @*   <img src="/images/Glass spheres.gif"> *@
+                                                <img src="@($"{baseUrl}/images/Animation3.gif")">
+                                        </div>
+        }
+        else
+        {
+        //no records
+                                           <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<SalarySection> salarySections = new List<SalarySection>();
+
+    private SalarySection salarySection { get; set; } = new SalarySection();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private string baseUrl;
+
+    IGrid? GridExp { get; set; } 
+
+    //IEnumerable<IGrid> GridExp = new IEnumerable<IGrid>();
+    //IGrid GridExp { get; set; } = GridEditNewRowPosition.Bottom;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+
+            await LoadSalarySection();
+        }
+    }
+
+    private async Task LoadSalarySection()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        salarySections = await _salarySectionGateway.GetSalarySectionList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadSalarySectionId()
+    {
+        StateHasChanged();
+        salarySection = await _salarySectionGateway.GetSalarySection(tempId);
+        salarySection.SalarySectionName = salarySection.SalarySectionName;
+        salarySection.SalarySectionBan = salarySection.SalarySectionBan;
+        StateHasChanged();
+    }
+
+    private async Task UpsertSalarySection()
+    {
+       bool isExist = await _salarySectionGateway.IsExist(salarySection.SalarySectionName,salarySection.SalarySectionId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Salary Section already exists");
+            return;
+        }
+
+        if (title == "Create")
+        {
+            salarySection = new SalarySection
+                {
+                    SalarySectionName = salarySection.SalarySectionName,
+                    SalarySectionBan = salarySection.SalarySectionBan
+                  
+                };
+            await _salarySectionGateway.Save(salarySection);
+            salarySections.Add(salarySection);
+            await _jsRuntime.ToastrSuccess("SalarySection Created Successfully");
+            await LoadSalarySection();
+            await LoadSalarySectionId();
+            ResetData();
+        }
+
+    
+        if (title == "Update")
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the salarySection if confirmed
+                salarySection = new SalarySection
+                    {
+                        SalarySectionId=tempId,
+                        SalarySectionName = salarySection.SalarySectionName,
+                        SalarySectionBan = salarySection.SalarySectionBan
+                        
+                    };
+                await _salarySectionGateway.Edit(salarySection);
+                salarySections.Add(salarySection);
+                await LoadSalarySection();
+                await _jsRuntime.ToastrSuccess("SalarySection Updated Successfully");
+            }
+            else
+            {
+                await LoadSalarySection();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        salarySection = new SalarySection();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadSalarySection();
+        //await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as SalarySection;
+        if (item != null)
+        {
+            tempId = item.SalarySectionId;
+        }
+
+        title = "Update";
+        await LoadSalarySectionId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

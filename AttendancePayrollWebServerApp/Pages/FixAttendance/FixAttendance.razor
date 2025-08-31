@@ -1,0 +1,658 @@
+﻿@page "/fixattendance"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models.View
+@using AttendancePayrollWebServerApp.Service
+@inject ShiftDetailGateway _shiftGateway
+@inject ShiftMasterGateway _shiftMasterGateway
+@inject EmployeeGateway _employeeGateway
+@inject DepartmentGateway _departmentGateway
+@inject DesignationGateway _designationGateway
+@inject AttendanceViewGateway _attendanceViewGateway
+@inject FixAttendanceViewGateway _fixAttendanceViewGateway
+@inject FixAttendanceGateway _fixAttendanceGateway
+@inject FixAttendanceBackupGateway _fixAttendanceBackupGateway
+@inject SectionGateway _sectionGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+
+
+<link rel="stylesheet" href="@($"{baseUrl}css/DxGridCss.css")">
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+<div class="row my-0" style="height:5% ; ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">Fix Attendance</h3>
+        @if (title != "Create")
+        {
+
+        }
+    </div>
+</div>
+
+
+<div class="row my-0" style="height: 640px;">
+    <div class="row" style="width: 100%; height: 100%; ">
+        <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:35%; ">
+
+            <div class="col-10">
+                <div class="col-12">
+                    <div class="form-check form-check-inline">
+                        <input type="radio"
+                               class="form-check-input custom-input"
+                               name="EmpOption"
+                               value="Individual"
+                               checked="@(selectedRadioTypeOption == "Individual")"
+                               @onchange="OnEmpOptionChanged" />
+                        <label class="form-check-label">Individual</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio"
+                               class="form-check-input custom-input"
+                               name="EmpOption"
+                               value="All"
+                               checked="@(selectedRadioTypeOption == "All")"
+                               @onchange="OnEmpOptionChanged" />
+                        <label class="form-check-label">All</label>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Employee Id</div>
+                <div class="col-9">
+                    <DxComboBox Data="@employees"
+                                TData="Employee"
+                                TValue="string"
+                                EditFormat="{0} "
+                                Enabled="@isEnabled"
+                                Value="@employeeId"
+                                ValueChanged="@OnEmployeeSelected"
+                                ValueFieldName="@nameof(Employee.EmployeeId)"
+                                SearchMode="@ListSearchMode.AutoSearch"
+                                SearchFilterCondition="@ListSearchFilterCondition.Contains"
+                                CssClass="cw-480"
+                                NullText="-- Select Id --"
+                                InputId="cbMultiColumn">
+                        <DxListEditorColumn FieldName="@nameof(Employee.EmployeeId)" Caption="Id" />
+                        <DxListEditorColumn FieldName="@nameof(Employee.EmployeeName)" Caption="Name" />
+                    </DxComboBox>
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Employee</div>
+                <div class="col-9">
+                    <input type="text" @bind="employeeName" class="form-control custom-input" disabled="true" readonly />
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Join Date</div>
+                <div class="col-9">
+                    <input type="datetime" @bind="joinDate" class="form-control custom-input" disabled="true" readonly />
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Department</div>
+                <div class="col-9">
+
+                    <input type="text" @bind="departmentName" class="form-control custom-input" disabled="true" readonly />
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Section</div>
+                <div class="col-9">
+
+                    <input type="text" @bind="SectionName" class="form-control custom-input" disabled="true" readonly />
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Designation</div>
+                <div class="col-9">
+
+                    <input type="text" @bind="designationName" class="form-control custom-input" disabled="true" readonly />
+                </div>
+            </div>
+
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">From Date</div>
+                <div class="col-9">
+                    <input type="date" id="fromDate"
+                           class="form-control custom-input @(isFromDateValid ? "" : "is-invalid")"
+                           @bind="fromDate"
+                           @bind:event="oninput"
+                           @onchange="ValidateFromDate" />
+                    @if (!isFromDateValid)
+                    {
+                        <div class="invalid-feedback">
+                            Please enter a valid date.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">To Date</div>
+                <div class="col-9">
+                    <input type="date" id="toDate"
+                           class="form-control custom-input @(isToDateValid ? "" : "is-invalid")"
+                           @bind="toDate"
+                           @bind:event="oninput"
+                           @onchange="ValidateToDate" />
+                    @if (!isToDateValid)
+                    {
+                        <div class="invalid-feedback">
+                            Please enter a valid date.
+                        </div>
+                    }
+                </div>
+            </div>
+
+           @*  
+            <br />
+            <a href="noneprocessedfixattendancelist" class="link-info" style="font-size: 16px;">None processed fixed history...</a>
+ *@
+
+        </div>
+
+        <div class="col-12 col-lg-1 " style="width: 1%;"></div>
+        <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:60% ;  ">
+            <div>
+                @if (attendances != null && attendances.Any() && employeeId != null && selectedRadioTypeOption == "Individual")
+                {
+                    <div class="grid-container">
+                        <DxGrid @ref="Grid"
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 15,50,100,150,300,500, 1000 })"
+                                PagerPosition="GridPagerPosition.Bottom"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowSearchBox="true"
+                                AutoExpandAllGroupRows="true"
+                                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                PageSize="15"
+                                Data="DataSource"
+                                KeyFieldName="AttendanceId"
+                                ValidationEnabled="false"
+                                EditMode="GridEditMode.EditCell"
+                                EditModelSaving="Grid_EditModelSaving"
+                                CustomizeElement="Grid_CustomizeElement"
+                                CustomizeEditModel="Grid_CustomizeEditModel"
+                                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                TextWrapEnabled="false"
+                                HighlightRowOnHover="true">
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Submit" Click="Submit_Click" IconCssClass="my-submit-icon" Enabled="BatchItemsEnabled" BeginGroup="true" />
+                                    <DxToolbarItem Text="Revert" Click="Revert_Click" IconCssClass="my-revert-icon" Enabled="BatchItemsEnabled" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+
+                                <DxGridDataColumn FieldName="AttendanceDate" Caption="Date" DisplayFormat="dd-MMM-yyyy" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn FieldName="Status" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn Caption="Actual In" FieldName="ActualTimeIn" ReadOnly="true" Width="150px" DisplayFormat="HH:mm" />
+
+                                <DxGridDataColumn Caption="Fixed In" FieldName="FixedTimein" Width="150px" DisplayFormat="HH:mm">
+                                    <EditSettings>
+                                        <DxTimeEditSettings />
+                                    </EditSettings>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn Caption="Actual Out" FieldName="ActualTimeOut" ReadOnly="true" Width="150px" DisplayFormat="HH:mm" />
+                                <DxGridDataColumn Caption="Fixed Out" FieldName="FixedTimeOut" Width="150px" DisplayFormat="HH:mm">
+                                    <EditSettings>
+                                        <DxTimeEditSettings />
+                                    </EditSettings>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn Caption="Remarks" FieldName="Remarks"  Width="150px" DisplayFormat="HH:mm" />
+
+
+                                <DxGridDataColumn Caption="Over Time" FieldName="OT" Width="150px" DisplayFormat="HH:mm" ReadOnly="true">
+                                </DxGridDataColumn>
+                            </Columns>
+                        </DxGrid>
+                    </div>
+                }
+
+                else if (attendances != null && attendances.Any() && selectedRadioTypeOption == "All")
+                {
+                    <div class="grid-container">
+                        <DxGrid @ref="Grid"
+                                
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 15,50,100,150,300,500, 1000 })"
+                                PagerPosition="GridPagerPosition.Bottom"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowSearchBox="true"
+                                AutoExpandAllGroupRows="true"
+                                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                PageSize="15"
+                                Data="DataSource"
+                                KeyFieldName="AttendanceId"
+                                ValidationEnabled="false"
+                                EditMode="GridEditMode.EditCell"
+                                EditModelSaving="Grid_EditModelSaving"
+                                CustomizeElement="Grid_CustomizeElement"
+                                CustomizeEditModel="Grid_CustomizeEditModel"
+                                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                TextWrapEnabled="false"
+                                HighlightRowOnHover="true">
+                            <ToolbarTemplate>
+                                <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                                    <DxToolbarItem Text="Submit" Click="Submit_Click" IconCssClass="my-submit-icon" Enabled="BatchItemsEnabled" BeginGroup="true" />
+                                    <DxToolbarItem Text="Revert" Click="Revert_Click" IconCssClass="my-revert-icon" Enabled="BatchItemsEnabled" />
+                                </DxToolbar>
+                            </ToolbarTemplate>
+                            <Columns>
+
+
+
+                                <DxGridDataColumn FieldName="EmployeeId" Caption="Id" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn FieldName="EmployeeName" Caption="Name" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn FieldName="DepartmentName" Caption="Dept Name" Width="150px" ReadOnly="true" />
+
+                                <DxGridDataColumn FieldName="AttendanceDate" Caption="Date" DisplayFormat="dd-MMM-yyyy" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn FieldName="Status" Width="150px" ReadOnly="true" />
+                                <DxGridDataColumn Caption="Actual In" FieldName="ActualTimeIn" ReadOnly="true" Width="150px" DisplayFormat="HH:mm" />
+
+                                <DxGridDataColumn Caption="Fixed In" FieldName="FixedTimein" Width="150px"  DisplayFormat="HH:mm">
+                                    <EditSettings >
+                                        <DxTimeEditSettings Format="HH:mm" />
+                                    </EditSettings>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn Caption="Actual Out" FieldName="ActualTimeOut" ReadOnly="true" Width="150px" DisplayFormat="HH:mm" />
+                                <DxGridDataColumn Caption="Fixed Out" FieldName="FixedTimeOut" Width="150px" DisplayFormat="HH:mm">
+                                    <EditSettings>
+                                        <DxTimeEditSettings />
+                                    </EditSettings>
+                                </DxGridDataColumn>
+
+                                <DxGridDataColumn Caption="Remarks" FieldName="Remarks" Width="150px" DisplayFormat="HH:mm" />
+
+
+                                <DxGridDataColumn Caption="Over Time" FieldName="OT" Width="150px" DisplayFormat="HH:mm" ReadOnly="true">
+                                </DxGridDataColumn>
+                            </Columns>
+                        </DxGrid>
+
+                    </div>
+                }
+
+
+
+                else
+                {
+                    if (IsLoading)
+                    {
+                        <div class="text-center">
+                            <img src="@($"{baseUrl}/images/Animation3.gif")">
+                        </div>
+                    }
+                    else
+                    {
+                        <p>no records found .....</p>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #28a745; color: white;">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code
+{
+
+    private string message = string.Empty;
+    private string modalTitle = string.Empty;
+    private bool showModal = false;
+
+    //   <DxGridDataColumn FieldName="Status" MinWidth="80" ReadOnly="true" CssClass="readonly-column" />      CssClass="readonly-column"readonly-column
+    private string? name;
+    private string employeeName = "";
+    private int departmentId;
+    private string? departmentName = "";
+    private string? SectionName = "";
+    private string? designationName = "";
+    private DateTime? joinDate;
+    private int sectionId;
+
+    private int designationId;
+    private bool isEnabled = true;
+    IList<FixAttendanceView> DataSource { get; set; }
+    Dictionary<FixAttendanceView, DataChange> UnsavedChanges { get; } = new();
+
+    bool BatchItemsEnabled => UnsavedChanges.Count > 0 || Grid.IsEditing();
+    record DataChange(DataChangeType Type, HashSet<string> ChangedFields);
+    enum DataChangeType { Modification, Addition, Delete }
+
+    private List<Employee> employees = new();
+
+    //  private List<FixAttendanceView> attendances = new List<FixAttendanceView>();
+    private List<FixAttendanceView> attendances = new List<FixAttendanceView>();
+
+
+    private string selectedRadioTypeOption { get; set; } = "Individual";
+    private Employee employee = new Employee();
+    private Department department = new Department();
+    private Designation designation = new Designation();
+    private Section section = new Section();
+    private string? employeeId = null;
+    private FixAttendanceInstant fixAttendanceInstance { get; set; } = new FixAttendanceInstant();
+    private DateTime fromDate = DateTime.Today;
+    private DateTime toDate = DateTime.Today;
+    private string? baseUrl;
+    IGrid? Grid { get; set; }
+    private bool IsLoading { get; set; } = false;
+    private string title { get; set; } = "Create";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+            baseUrl = _navigationManager.BaseUri;
+            employees = await _employeeGateway.GetEmployeeList();
+
+            await UpdateDataAsync();
+
+            StateHasChanged();
+        }
+    }
+
+
+    // var data = (await _fixAttendanceViewGateway.GetAttendanceViewList()).Select(e => e.Clone());
+
+
+
+    async Task UpdateDataAsync()
+    {
+        var data = (await _fixAttendanceViewGateway.GetAttendanceViewList()).Select(e => e.Clone());
+        DataSource = new List<FixAttendanceView>(data);
+
+    }
+
+    async Task New_Click() => await Grid.StartEditNewRowAsync();
+    async Task Revert_Click()
+    {
+        await Grid.CancelEditAsync();
+        await ClearUnsavedChangesAsync();
+        // attendances = await _attendanceViewGateway.GetAttViewListByEmpIdByFromToDate(fromDate, toDate, employeeId);
+        attendances = await _fixAttendanceViewGateway.GetFixAttendanceViewList(fromDate, toDate, employeeId);
+        DataSource = attendances;
+    }
+
+    async Task ClearUnsavedChangesAsync()
+    {
+        UnsavedChanges.Clear();
+        await UpdateDataAsync();
+    }
+
+
+    async Task<FixAttendanceView> FindDataItem(FixAttendanceView changedItem)
+    {
+        return (await _fixAttendanceViewGateway.GetAttendanceViewList()).FirstOrDefault(e => e.AttendanceId == changedItem.AttendanceId);
+    }
+
+
+
+
+    void Grid_EditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editableAttendance1 = (FixAttendanceView)e.EditModel;
+        var AttendanceView2 = (FixAttendanceView)e.DataItem;
+        if (e.IsNew)
+        {
+            DataSource.Add(editableAttendance1);
+            UnsavedChanges[editableAttendance1] = new(DataChangeType.Addition, new());
+        }
+        else
+        {
+            var changedFields = DataUtils.ApplyModifiedFields2(editableAttendance1, AttendanceView2);
+            if (changedFields.Count > 0)
+            {
+                if (UnsavedChanges.TryGetValue(AttendanceView2, out var changes))
+                    changes.ChangedFields.UnionWith(changedFields);
+                else
+                    UnsavedChanges.Add(AttendanceView2, new(DataChangeType.Modification, changedFields));
+            }
+        }
+    }
+
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs ea)
+    {
+        if (ea.ElementType == GridElementType.DataCell)
+        {
+            var Attendance1 = (FixAttendanceView)Grid.GetDataItem(ea.VisibleIndex);
+            var column = (IGridDataColumn)ea.Column;
+            bool isNew = Attendance1 == null;
+            if (!isNew && UnsavedChanges.TryGetValue(Attendance1, out var changes))
+            {
+                if (changes.Type == DataChangeType.Addition || changes.ChangedFields.Contains(column.FieldName))
+                    ea.CssClass = "grid-modified-cell";
+            }
+        }
+    }
+
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        if (e.IsNew)
+        {
+            var newAttendance = (FixAttendanceView)e.EditModel;
+            //newAttendance.CompanyName = "ABC";
+            //newCompany.LastName = "Doe";
+            newAttendance.AttendanceId = DataSource.Max(x => x.AttendanceId) + 1;
+        }
+    }
+
+    async Task Submit_Click()
+    {
+        foreach (var unsavedChange in UnsavedChanges)
+        {
+            var changedItem = unsavedChange.Key;
+            var changeType = unsavedChange.Value.Type;
+            var dataItem = await FindDataItem(changedItem);
+            DateTime attDate = dataItem.AttendanceDate;
+            string empid = dataItem.EmployeeId;
+            switch (changeType)
+            {
+                case DataChangeType.Addition:
+                    // await _companyGateway.InsertCompanyAsyncGridTest(changedItem);
+                    break;
+                case DataChangeType.Delete:
+                    // await _companyGateway.RemoveCompanyAsyncGridTest(dataItem);
+                    break;
+                case DataChangeType.Modification:
+
+                    bool isExist = await _fixAttendanceGateway.IsExistDateEmployee(attDate, empid);
+                    if (isExist)
+                    {
+                        await _fixAttendanceBackupGateway.InsertFixAttendanceBackUp(attDate, empid);
+                        await _fixAttendanceGateway.DeleteFixAttendanceId(attDate, empid);
+                    }
+
+                    //For Showing success Modal //Rasif
+                    if (dataItem.FixedTimein != changedItem.FixedTimein || 
+                        dataItem.FixedTimeOut!=changedItem.FixedTimeOut ||
+                        dataItem.Remarks != changedItem.Remarks)                                                 
+                    {
+                        message = "Data fixed successfully";
+                        modalTitle = "Success";
+                        showModal = true;
+                    }
+                    //For Showing success Modal //Rasif
+
+                    await _fixAttendanceGateway.InsertFixAttendanceAsync(dataItem, changedItem);
+                    break;
+            }
+        }
+        await ClearUnsavedChangesAsync();
+        attendances = await _fixAttendanceViewGateway.GetAttViewListByEmpIdByFromToDate(fromDate, toDate, employeeId);
+        DataSource = attendances;
+    }
+
+    private async Task OnEmployeeSelected(object newValue)
+    {
+        employeeId = newValue.ToString();
+        await LoadEmployeeDetails();
+        await LoadAttendanceDataAsync(fromDate, toDate, employeeId);
+        StateHasChanged();
+    }
+
+
+
+    private async Task LoadEmployeeDetails()
+    {
+        var result = await _employeeGateway.GetEmployee(employeeId);
+        employee = result;
+        employeeName = employee.EmployeeName;
+        joinDate = employee.JoinDate;
+        departmentId = employee.DepartmentId;
+        department = await _departmentGateway.GetDepartments(departmentId);
+        departmentName = department.DepartmentName;
+        sectionId = employee.SectionId;
+        section = await _sectionGateway.GetSection(sectionId);
+        SectionName = section.SectionName;
+        designationId = employee.DesignationId;
+        designation = await _designationGateway.GetDesignation(designationId);
+        designationName = designation.DesignationName;
+    }
+
+    private bool isFromDateValid = true;
+    private async Task ValidateFromDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            fromDate == DateTime.MinValue ||
+            fromDate.Year < 1900
+           )
+        {
+            isFromDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+        }
+
+        if (isToDateValid)
+        {
+            await LoadAttendanceDataAsync(fromDate, toDate, employeeId);
+            IsLoading = false;
+            StateHasChanged();
+        }
+        StateHasChanged();
+    }
+
+
+
+    private bool isToDateValid = true;
+    private async Task ValidateToDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            toDate == DateTime.MinValue ||
+            toDate.Year < 1900
+        )
+        {
+            isToDateValid = false;
+        }
+        else
+        {
+            isToDateValid = true;
+            IsLoading = true;
+        }
+        if (isToDateValid)
+        {
+            await LoadAttendanceDataAsync(fromDate, toDate, employeeId);
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+
+    private async Task LoadAttendanceDataAsync(DateTime fromDate, DateTime toDate, string? employeeId)
+    {
+        try
+        {
+            attendances = await _fixAttendanceViewGateway.GetAttViewListByEmpIdByFromToDate(fromDate, toDate, employeeId);
+            DataSource = attendances;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private async Task OnEmpOptionChanged(ChangeEventArgs e)
+    {
+        selectedRadioTypeOption = e.Value?.ToString() ?? "Individual";
+        if (selectedRadioTypeOption == "Individual")
+        {
+            isEnabled = true;
+            await LoadAttendanceDataAsync(fromDate, toDate, employeeId);
+            await InvokeAsync(StateHasChanged);
+        }
+        if (selectedRadioTypeOption == "All")
+        {
+            isEnabled = false;
+            employeeId = null;
+            employeeName = "";
+            departmentName = "";
+            SectionName = "";
+            designationName = "";
+            joinDate = null;
+            await LoadAttendanceDataAsync(fromDate, toDate, employeeId);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+

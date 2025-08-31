@@ -1,0 +1,398 @@
+﻿@page "/designationpage"
+@using AttendancePayrollWebServerApp.Helper
+@inject DesignationGateway _designationGateway 
+@inject CategoryItemGateway _categoryItemGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+
+<div class="row my-2" >
+            <div class="d-flex justify-content-between align-items-start">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Designation</h3>
+        @if (title != "Create")
+        {
+                            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                    style="outline: none; width:auto;">
+                                Add New Designation
+                            </button>
+        }
+       </div>
+
+        <div class="col-10">
+           <EditForm Model="@designation" OnValidSubmit="@UpsertDesignation">
+                    <DataAnnotationsValidator /> 
+
+            <div class="row" style="width: 120% "> 
+                @*  Upper Left Div begin------------------ *@
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:48%">
+
+
+                <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Designation Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="designation.DesignationName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>designation.DesignationName"></ValidationMessage>
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Bangla Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="designation.DesignationNameBan"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>designation.DesignationNameBan"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                     <div class="row my-1 align-items-center">
+                              <div class="col-3 custom-input">Rank</div>
+                                <div class="col-9">
+                                    <InputSelect @bind-Value="designation.RankCategoryItemId" class="form-control custom-input">
+                                        <option value="0" disabled="disabled" selected>-- Select Rank --</option>
+                                @foreach (var items in rankCategoryItems)
+                                {
+                                                     <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                }
+                                    </InputSelect>
+                                    <ValidationMessage For="()=>designation.RankCategoryItemId"></ValidationMessage>
+                                </div>
+                            </div>
+
+
+                            <div class="row my-1 align-items-center">
+                              <div class="col-3 custom-input">Grade</div>
+                                <div class="col-9">
+                                    <InputSelect @bind-Value="designation.GradeCategoryItemId" class="form-control custom-input">
+                                        <option value="0" disabled="disabled" selected>-- Select Grade --</option>
+                                @foreach (var items in gradeCategoryItems)
+                                {
+                                                         <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                }
+                                    </InputSelect>
+                                    <ValidationMessage For="()=>designation.GradeCategoryItemId"></ValidationMessage>
+                                </div>
+                            </div>
+
+
+                              <div class="row my-1 align-items-center">
+                                <div class="col-3 custom-input">Attendance Bonus</div>
+                                <div class="col-9">
+                                    <InputNumber @bind-Value="designation.AttendanceBonus"  class="form-control custom-input"></InputNumber>
+                                     <ValidationMessage For="()=>designation.AttendanceBonus"></ValidationMessage>
+                                </div>
+                            </div>
+
+                          
+                             
+
+                     </div>
+
+
+                @* Upper Left Div Ended *@
+
+                  
+
+                @* Upper Righ Div begin------------------ *@
+                    <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:48%">
+
+                        
+
+
+                            
+
+                              <div class="row my-1 align-items-center">
+                                <div class="col-3 custom-input">Night Allowance</div>
+                                <div class="col-9">
+                                    <InputNumber @bind-Value="designation.NightAllowance"  class="form-control custom-input"></InputNumber>
+                                     <ValidationMessage For="()=>designation.NightAllowance"></ValidationMessage>
+                                </div>
+                            </div>
+
+                            <div class="row my-1 align-items-center">
+                                <div class="col-3 custom-input">Holiday Allowance</div>
+                                <div class="col-9">
+                                    <InputNumber @bind-Value="designation.HolidayAllowance"  class="form-control custom-input"></InputNumber>
+                                     <ValidationMessage For="()=>designation.HolidayAllowance"></ValidationMessage>
+                                </div>
+                            </div>
+
+                             <div class="row my-1 align-items-center">
+                              <div class="col-3 custom-input">Work Type</div>
+                                <div class="col-9">
+                                    <InputSelect @bind-Value="designation.WorkTypeCategoryItemId" class="form-control custom-input">
+                                        <option value="0" disabled="disabled" selected>-- Select Work Type --</option>
+                                @foreach (var items in workTypeCategoryItems)
+                                {
+                                          <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                }
+                                    </InputSelect>
+                                    <ValidationMessage For="()=>designation.WorkTypeCategoryItemId"></ValidationMessage>
+                                </div>
+                            </div>
+
+                            
+
+
+                        
+
+                        
+
+                          </div>
+                @* Upper Left Div Ended *@
+                    <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 116px;  width:150px" >@title</button>  
+                </div>
+                  </EditForm> 
+    </div>
+</div>
+<div>
+
+
+
+    @if (designations != null && designations.Any())
+    {
+                           <DxGrid @ref="GridExp"
+
+                            Data="@designations"
+
+                            ShowGroupPanel="true"
+                            ShowFilterRow="true"
+                            ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                            PageSizeSelectorVisible="true"
+                            PageSizeSelectorAllRowsItemVisible="true"
+                            PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                            PageSize="8" 
+                            PagerPosition="GridPagerPosition.Bottom"
+                            TextWrapEnabled="false"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            ShowSearchBox="true"
+                            AutoExpandAllGroupRows="true"
+                            GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                            SelectionMode="GridSelectionMode.Multiple"
+                            SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                            FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                            RowClick="OnRowClick"
+                           >
+
+                         <Columns>
+                                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                    <DxGridDataColumn Caption="Designation Name" FieldName="DesignationName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                   
+
+                                       
+                        </Columns>
+
+                                <TotalSummary>
+                                    <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="DesignationName" />
+                                </TotalSummary>
+
+                        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                        <div class="text-center">
+                                <img src="/images/Glass spheres.gif">
+                        </div>
+        }
+
+        else
+        {
+            //no records
+                           <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Designation> designations = new List<Designation>();
+    private List<CategoryItem> rankCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> gradeCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> workTypeCategoryItems { get; set; } = new List<CategoryItem>();
+
+    int randid=14;
+    int gradeId = 13;
+    int workType = 15;
+
+    private Designation designation { get; set; } = new Designation();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+
+
+    IGrid? GridExp { get; set; }
+
+    //IEnumerable<IGrid> GridExp = new IEnumerable<IGrid>();
+    //IGrid GridExp { get; set; } = GridEditNewRowPosition.Bottom;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadDesignation();
+        }
+    }
+
+    private async Task LoadDesignation()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        designations = await _designationGateway.GetDesignationList();
+
+       // categoriesItems = await _categoryItemGateway.GetCategoryItemList();
+        var categoryItems = await _categoryItemGateway.GetCategoryItemList();
+        rankCategoryItems = categoryItems.Where(data => data.CategoryId == randid).ToList();
+        gradeCategoryItems = categoryItems.Where(data => data.CategoryId == gradeId).ToList();
+        workTypeCategoryItems = categoryItems.Where(data => data.CategoryId == workType).ToList();
+
+        
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadDesignationId()
+    {
+        StateHasChanged();
+        designation = await _designationGateway.GetDesignation(tempId);
+        designation.DesignationName = designation.DesignationName;
+        designation.DesignationNameBan = designation.DesignationNameBan;
+        StateHasChanged();
+    }
+
+    private async Task UpsertDesignation()
+    {
+        bool isExist = await _designationGateway.IsExist(designation.DesignationName, designation.DesignationId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Designation name already exists");
+            return;
+        }
+
+
+
+
+        if (title == "Create")
+        {
+            designation = new Designation
+                {
+                    DesignationName = designation.DesignationName,
+                    DesignationNameBan = designation.DesignationNameBan,
+                    RankCategoryItemId =designation.RankCategoryItemId,
+                    GradeCategoryItemId = designation.GradeCategoryItemId,
+                    AttendanceBonus=designation.AttendanceBonus,
+                    NightAllowance=designation.NightAllowance,
+                    HolidayAllowance=designation.HolidayAllowance,
+                    WorkTypeCategoryItemId = designation.WorkTypeCategoryItemId
+                };
+            await _designationGateway.Save(designation);
+            designations.Add(designation);
+            await _jsRuntime.ToastrSuccess("Designation Created Successfully");
+            await LoadDesignation();
+            await LoadDesignationId();
+            ResetData();
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the designation if confirmed
+                designation = new Designation
+                    {
+                        DesignationId = tempId,
+                        DesignationName = designation.DesignationName,
+                        DesignationNameBan = designation.DesignationNameBan,
+                        RankCategoryItemId = designation.RankCategoryItemId,
+                        GradeCategoryItemId = designation.GradeCategoryItemId,
+                        AttendanceBonus = designation.AttendanceBonus,
+                        NightAllowance = designation.NightAllowance,
+                        HolidayAllowance = designation.HolidayAllowance,
+                        WorkTypeCategoryItemId = designation.WorkTypeCategoryItemId
+                    };
+                await _designationGateway.Edit(designation);
+                designations.Add(designation);
+                await LoadDesignation();
+                await _jsRuntime.ToastrSuccess("Designation Updated Successfully");
+            }
+            else
+            {
+                await LoadDesignation();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        designation = new Designation();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadDesignation();
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as Designation;
+        if (item != null)
+        {
+            tempId = item.DesignationId;
+        }
+
+        title = "Update";
+        await LoadDesignationId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

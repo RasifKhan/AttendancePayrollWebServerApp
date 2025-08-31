@@ -1,0 +1,137 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+	  <EnableMSDeployPackage>True</EnableMSDeployPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.Designer.cs" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xsc" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xsd" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xss" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\SalaryDataSet.Designer.cs" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xsc" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xsd" />
+    <Content Remove="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xss" />
+    <Content Remove="wwwroot\Reports\DataSet1.Designer.cs" />
+    <Content Remove="wwwroot\Reports\DataSet1.xsc" />
+    <Content Remove="wwwroot\Reports\DataSet1.xsd" />
+    <Content Remove="wwwroot\Reports\DataSet1.xss" />
+    <Content Remove="wwwroot\Reports\JobCard\JobCardDS.Designer.cs" />
+    <Content Remove="wwwroot\Reports\JobCard\JobCardDS.xsc" />
+    <Content Remove="wwwroot\Reports\JobCard\JobCardDS.xsd" />
+    <Content Remove="wwwroot\Reports\JobCard\JobCardDS.xss" />
+    <Content Remove="wwwroot\Reports\Report1.rdlc" />
+    <Content Remove="wwwroot\Reports\SalaryDataSet.Designer.cs" />
+    <Content Remove="wwwroot\Reports\SalaryDataSet.xsc" />
+    <Content Remove="wwwroot\Reports\SalaryDataSet.xsd" />
+    <Content Remove="wwwroot\Reports\SalaryDataSet.xss" />
+    <Content Remove="wwwroot\Reports\SalaryReport.rdlc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AttendanceSumDS.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="wwwroot\Reports\AttendanceSummary\SalaryDataSet.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SalaryDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="wwwroot\Reports\DataSet1.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DataSet1.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="wwwroot\Reports\JobCard\JobCardDS.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>JobCardDS.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="wwwroot\Reports\SalaryDataSet.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SalaryDataSet.xsd</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\Reports\Report1.rdlc" />
+    <EmbeddedResource Include="wwwroot\Reports\SalaryReport.rdlc" />
+  </ItemGroup>
+  <ItemGroup>
+	  <!-- Add this line -->
+    <PackageReference Include="AspNetCore.Reporting" Version="2.1.0" />
+    <PackageReference Include="DevExpress.Blazor" Version="24.2.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.0" />
+	  
+    <!--<PackageReference Include="DevExpress.Blazor" Version="24.2.6" />-->
+	  
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.17" />
+    <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="CrystalDecisions.CrystalReports.Engine">
+      <HintPath>..\..\..\..\..\Program Files (x86)\SAP BusinessObjects\Crystal Reports for .NET Framework 4.0\Common\SAP BusinessObjects Enterprise XI 4.0\win32_x86\dotnet\CrystalDecisions.CrystalReports.Engine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+	
+  <ItemGroup>
+    <Folder Include="wwwroot\images\employee\" />
+    <Folder Include="wwwroot\images\employeeTemp\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xsc" />
+    <None Include="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xsd">
+      <SubType>Designer</SubType>
+      <LastGenOutput>AttendanceSumDS.Designer.cs</LastGenOutput>
+      <Generator>MSDataSetGenerator</Generator>
+    </None>
+    <None Include="wwwroot\Reports\AttendanceSummary\AttendanceSumDS.xss" />
+    <None Include="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xsc" />
+    <None Include="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xsd">
+      <SubType>Designer</SubType>
+      <LastGenOutput>SalaryDataSet.Designer.cs</LastGenOutput>
+      <Generator>MSDataSetGenerator</Generator>
+    </None>
+    <None Include="wwwroot\Reports\AttendanceSummary\SalaryDataSet.xss" />
+    <None Include="wwwroot\Reports\DataSet1.xsc" />
+    <None Include="wwwroot\Reports\DataSet1.xsd">
+      <SubType>Designer</SubType>
+      <LastGenOutput>DataSet1.Designer.cs</LastGenOutput>
+      <Generator>MSDataSetGenerator</Generator>
+    </None>
+    <None Include="wwwroot\Reports\DataSet1.xss" />
+    <None Include="wwwroot\Reports\JobCard\JobCardDS.xsc" />
+    <None Include="wwwroot\Reports\JobCard\JobCardDS.xsd">
+      <SubType>Designer</SubType>
+      <LastGenOutput>JobCardDS.Designer.cs</LastGenOutput>
+      <Generator>MSDataSetGenerator</Generator>
+    </None>
+    <None Include="wwwroot\Reports\JobCard\JobCardDS.xss" />
+    <None Include="wwwroot\Reports\SalaryDataSet.xsc" />
+    <None Include="wwwroot\Reports\SalaryDataSet.xsd">
+      <SubType>Designer</SubType>
+      <LastGenOutput>SalaryDataSet.Designer.cs</LastGenOutput>
+      <Generator>MSDataSetGenerator</Generator>
+    </None>
+    <None Include="wwwroot\Reports\SalaryDataSet.xss" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <Generator>SettingsSingleFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+</Project>

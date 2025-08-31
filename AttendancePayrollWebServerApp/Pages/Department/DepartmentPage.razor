@@ -1,0 +1,300 @@
+﻿
+@page "/departmentpage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "departmentpage_Access")]
+
+@inject DepartmentGateway _departmentGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@inject IUserPermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="row my-0">
+    <div class="d-flex justify-content-between align-items-start">
+        <h3 class="card-title text-primary mb-3 ml-3">Department Management</h3>
+        <button type="button" class="btn btn-primary" @onclick="@AddNew" disabled="@(!canAdd)">
+            Add New Department
+        </button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button -->
+        <button type="button" class="btn btn-success" @onclick="SaveDepartment" disabled="@(!canAdd)">
+            Save Department
+        </button>
+
+        <!-- Edit Button -->
+        <button type="button" class="btn btn-warning" @onclick="EditDepartment" disabled="@(!canEdit)">
+            Edit Department
+        </button>
+
+        <!-- Delete Button -->
+        <button type="button" class="btn btn-danger" @onclick="DeleteDepartment" disabled="@(!canDelete)">
+            Delete Department
+        </button>
+
+        <!-- Read-only content -->
+        <div class="mt-3">
+            <p>Department information display area...</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool canAdd = false;
+    private bool canEdit = false;
+    private bool canDelete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            _navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim != null)
+        {
+            var userId = userIdClaim.Value;
+            canAdd = await PermissionService.HasPermissionAsync(userId, "departmentpage", UserPolicy.ADD_PRODUCT);
+            canEdit = await PermissionService.HasPermissionAsync(userId, "departmentpage", UserPolicy.EDIT_PRODUCT);
+            canDelete = await PermissionService.HasPermissionAsync(userId, "departmentpage", UserPolicy.DELETE_PRODUCT);
+        }
+    }
+
+    private async Task AddNew()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "departmentpage", UserPolicy.ADD_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to add a department.");
+            return;
+        }
+        // Add new department logic
+    }
+
+    private async Task SaveDepartment()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "departmentpage", UserPolicy.ADD_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to save a department.");
+            return;
+        }
+        // Save department logic
+    }
+
+    private async Task EditDepartment()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "departmentpage", UserPolicy.EDIT_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to edit a department.");
+            return;
+        }
+        // Edit department logic
+    }
+
+    private async Task DeleteDepartment()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "departmentpage", UserPolicy.DELETE_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to delete a department.");
+            return;
+        }
+        // Delete department logic
+    }
+}
+
+
+
+@* @page "/departmentpage"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "departmentpage_Access")]
+
+@inject DepartmentGateway _departmentGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@inject IUserPermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="row my-0">
+    <div class="d-flex justify-content-between align-items-start">
+        <h3 class="card-title text-primary mb-3 ml-3">Department Management</h3>
+
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-primary" @onclick="@AddNew">
+                Add New Department
+            </button>
+        </AuthorizeComponent>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-success" @onclick="SaveDepartment">
+                Save Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Edit Button -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.EDIT_PRODUCT">
+            <button type="button" class="btn btn-warning" @onclick="EditDepartment">
+                Edit Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Delete Button -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.DELETE_PRODUCT">
+            <button type="button" class="btn btn-danger" @onclick="DeleteDepartment">
+                Delete Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Read-only content for users without edit permissions -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.VIEW_PRODUCT">
+            <div class="mt-3">
+                <p>Department information display area...</p>
+            </div>
+        </AuthorizeComponent>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize department data
+    }
+
+    private async Task AddNew()
+    {
+        // Add new department logic
+        // Ensure user has ADD_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task SaveDepartment()
+    {
+        // Save department logic
+        // Ensure user has ADD_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task EditDepartment()
+    {
+        // Edit department logic
+        // Ensure user has EDIT_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+
+    private async Task DeleteDepartment()
+    {
+        // Delete department logic
+        // Ensure user has DELETE_PRODUCT permission (already handled by AuthorizeComponent)
+    }
+}
+ *@
+
+
+
+
+
+
+
+
+@* @page "/departmentpage"
+@using AttendancePayrollWebServerApp.Helper
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "departmentpage_Access")]
+
+
+@inject DepartmentGateway _departmentGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+<div class="row my-0">
+    <div class="d-flex justify-content-between align-items-start">
+        <h3 class="card-title text-primary mb-3 ml-3">Department Management</h3>
+
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-primary" @onclick="@AddNew">
+                Add New Department
+            </button>
+        </AuthorizeComponent>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Save Button (Only user2 can save in department page) -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.ADD_PRODUCT">
+            <button type="button" class="btn btn-success" @onclick="SaveDepartment">
+                Save Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Edit Button -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.EDIT_PRODUCT">
+            <button type="button" class="btn btn-warning" @onclick="EditDepartment">
+                Edit Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Delete Button -->
+        <AuthorizeComponent Module="departmentpage" Permission="@UserPolicy.DELETE_PRODUCT">
+            <button type="button" class="btn btn-danger" @onclick="DeleteDepartment">
+                Delete Department
+            </button>
+        </AuthorizeComponent>
+
+        <!-- Read-only content for users without edit permissions -->
+        <div class="mt-3">
+            <p>Department information display area...</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize department data
+    }
+
+    private async Task AddNew()
+    {
+        // Add new department logic
+    }
+
+    private async Task SaveDepartment()
+    {
+        // Save department logic
+    }
+
+    private async Task EditDepartment()
+    {
+        // Edit department logic
+    }
+
+    private async Task DeleteDepartment()
+    {
+        // Delete department logic
+    }
+}
+ *@

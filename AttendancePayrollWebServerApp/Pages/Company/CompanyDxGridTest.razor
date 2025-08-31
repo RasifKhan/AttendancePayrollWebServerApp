@@ -1,0 +1,210 @@
+﻿@page "/companydxgridtest"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Service
+@inject CompanyGateway _companyGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@using DevExpress.Blazor
+
+
+<link rel="stylesheet" href="@($"{baseUrl}css/DxGridCss.css")">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="grid-container">
+    <DxGrid @ref="Grid"
+
+           
+            
+            PageSizeSelectorVisible="true"
+            PageSizeSelectorAllRowsItemVisible="true"
+            PageSizeSelectorItems="@(new int[] { 12,50,100,150,300,500, 1000 })"
+            PagerPosition="GridPagerPosition.Bottom"
+            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+            ShowSearchBox="true"
+            AutoExpandAllGroupRows="true"
+            GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+            SelectionMode="GridSelectionMode.Multiple"
+            SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+            PageSize="12"
+
+
+            Data="DataSource"
+            KeyFieldName="CompanyId"
+            ValidationEnabled="false"
+            EditMode="GridEditMode.EditCell"
+            EditModelSaving="Grid_EditModelSaving"
+            CustomizeElement="Grid_CustomizeElement"
+            CustomizeEditModel="Grid_CustomizeEditModel"
+            ColumnResizeMode="GridColumnResizeMode.NextColumn"
+            TextWrapEnabled="false"
+            HighlightRowOnHover="true">
+        <ToolbarTemplate>
+            <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain">
+                <DxToolbarItem Text="Submit" Click="Submit_Click" IconCssClass="my-submit-icon" Enabled="BatchItemsEnabled" BeginGroup="true" />
+                <DxToolbarItem Text="Revert" Click="Revert_Click" IconCssClass="my-revert-icon" Enabled="BatchItemsEnabled" />
+            </DxToolbar>
+        </ToolbarTemplate>
+        <Columns>
+            <DxGridDataColumn FieldName="CompanyName" MinWidth="80" />
+            <DxGridDataColumn FieldName="Description" MinWidth="80"/>
+           
+        </Columns>
+    </DxGrid>
+</div>
+
+
+
+@* 
+IconCssClass="grid-toolbar-save" *@
+
+
+
+ 
+
+
+
+@code
+{
+    IGrid Grid { get; set; }
+    IList<Company> DataSource { get; set; }
+    Dictionary<Company, DataChange> UnsavedChanges { get; } = new();
+    bool BatchItemsEnabled => UnsavedChanges.Count > 0 || Grid.IsEditing();
+    private string baseUrl;
+    //  protected override async Task OnInitializedAsync() => await UpdateDataAsync();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await UpdateDataAsync();
+            StateHasChanged();
+        }
+    }
+
+
+
+   // protected override async Task OnInitializedAsync() => await UpdateDataAsync();
+
+
+
+    async Task New_Click() => await Grid.StartEditNewRowAsync();
+    async Task Revert_Click()
+    {
+        await Grid.CancelEditAsync();
+        await ClearUnsavedChangesAsync();
+    }
+
+    async Task Submit_Click()
+    {
+        foreach (var unsavedChange in UnsavedChanges)
+        {
+            var changedItem = unsavedChange.Key;
+            var changeType = unsavedChange.Value.Type;
+            var dataItem = await FindDataItem(changedItem);
+            switch (changeType)
+            {
+                case DataChangeType.Addition:
+                    await _companyGateway.InsertCompanyAsyncGridTest(changedItem);
+                    break;
+                case DataChangeType.Delete:
+                    await _companyGateway.RemoveCompanyAsyncGridTest(dataItem);
+                    break;
+                case DataChangeType.Modification:
+                    await _companyGateway.UpdateCompanyAsyncGridTest(dataItem, changedItem);
+                    break;
+            }
+        }
+        await ClearUnsavedChangesAsync();
+    }
+
+
+    void Grid_CustomizeElement(GridCustomizeElementEventArgs ea)
+    {
+        if (ea.ElementType == GridElementType.DataCell)
+        {
+            var company1 = (Company)Grid.GetDataItem(ea.VisibleIndex);
+            var column = (IGridDataColumn)ea.Column;
+            bool isNew = company1 == null;
+            if (!isNew && UnsavedChanges.TryGetValue(company1, out var changes))
+            {
+                if (changes.Type == DataChangeType.Addition || changes.ChangedFields.Contains(column.FieldName))
+                    ea.CssClass = "grid-modified-cell";
+            }
+        }
+    }
+
+    void Grid_CustomizeEditModel(GridCustomizeEditModelEventArgs e)
+    {
+        if (e.IsNew)
+        {
+            var newCompany = (Company)e.EditModel;
+            newCompany.CompanyName = "ABC";
+            //newCompany.LastName = "Doe";
+            newCompany.CompanyId = DataSource.Max(x => x.CompanyId) + 1;
+        }
+    }
+
+    void Grid_EditModelSaving(GridEditModelSavingEventArgs e)
+    {
+        var editableCompany = (Company)e.EditModel;
+        var company2 = (Company)e.DataItem;
+        if (e.IsNew)
+        {
+            DataSource.Add(editableCompany);
+            UnsavedChanges[editableCompany] = new(DataChangeType.Addition, new());
+        }
+        else
+        {
+            var changedFields = DataUtils.ApplyModifiedFields(editableCompany, company2);
+            if (changedFields.Count > 0)
+            {
+                if (UnsavedChanges.TryGetValue(company2, out var changes))
+                    changes.ChangedFields.UnionWith(changedFields);
+                else
+                    UnsavedChanges.Add(company2, new(DataChangeType.Modification, changedFields));
+            }
+        }
+    }
+
+    void DeleteDataItem(object dataItem)
+    {
+        var company3 = (Company)dataItem;
+        UnsavedChanges[company3] = new(DataChangeType.Delete, new());
+        DataSource.Remove(company3);
+        Grid.Reload();
+    }
+
+
+    async Task<Company> FindDataItem(Company changedItem)
+    {
+        return (await _companyGateway.Gridtest()).FirstOrDefault(e => e.CompanyId == changedItem.CompanyId);
+    }
+
+    async Task ClearUnsavedChangesAsync()
+    {
+        UnsavedChanges.Clear();
+        await UpdateDataAsync();
+    }
+
+    async Task UpdateDataAsync()
+    {
+        var data = (await _companyGateway.GetCompanyList()).Select(e => e.Clone());
+        DataSource = new List<Company>(data);
+    }
+
+    record DataChange(DataChangeType Type, HashSet<string> ChangedFields);
+    enum DataChangeType { Modification, Addition, Delete }
+
+
+}

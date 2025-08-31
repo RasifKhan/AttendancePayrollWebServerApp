@@ -1,0 +1,18 @@
+﻿@media (max-width: 768px) {
+    .custom-input {
+        font-size: 0.9rem;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .col-form-label {
+        margin-bottom: 0.25rem;
+    }
+}

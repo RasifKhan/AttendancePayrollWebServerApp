@@ -1,0 +1,73 @@
+﻿@* @using DevExpress.Blazor
+
+<DxDropDownBox @bind-Value="Value"
+               QueryDisplayText="QueryText"
+               DropDownWidthMode="DropDownWidthMode.EditorWidth"
+               InputId="ddbMultipleSelectionListBox"
+               CssClass="cw-480">
+    <DropDownBodyTemplate>
+        <DxListBox Data="@ListBoxData"
+                   TData="Department"
+                   TValue="Department"
+                   Values="@(GetListBoxValues(context.DropDown))"
+                   ValuesChanged="@((IEnumerable<Department> values) => ListBoxValuesChanged(values, context.DropDownBox))"
+                   TextFieldName="@nameof(Department.DepartmentName)"
+                   SelectionMode="ListBoxSelectionMode.Multiple"
+                   ShowCheckboxes="true"
+                   ShowSearchBox="true"
+                   CssClass="templateListbox">
+        </DxListBox>
+    </DropDownBodyTemplate>
+</DxDropDownBox>
+
+@code {
+    // Data source for the ListBox
+    IEnumerable<Department> ListBoxData { get; set; } = new List<Department>();
+
+
+    // Selected values (IEnumerable to match DxListBox expectation)
+    IEnumerable<Department> SelectedValues { get; set; } = new List<Department>();
+
+
+    // Value for the DropDownBox (single value or null)
+    Department Value { get; set; }
+
+
+    // Returns the current selected values for the ListBox
+    IEnumerable<Department> GetListBoxValues(DxDropDownBox dropDownBox) {
+        return SelectedValues;
+    }
+
+
+    // Handles changes to the ListBox selection
+
+    //---------------------------old 
+    void ListBoxValuesChanged(IEnumerable<Department> values, DxDropDownBox dropDownBox) {
+        SelectedValues = values; // Update the selected values
+        Value = SelectedValues.FirstOrDefault(); // Optionally set the DropDownBox value (single item or null)
+        dropDownBox.Refresh(); // Refresh the DropDownBox to update display text
+    }
+
+    
+
+
+    //-----------------------old
+    
+
+    string QueryText(DxDropDownBox dropDownBox) {
+        return SelectedValues.Any()
+            ? string.Join(", ", SelectedValues.Select(e => e.DepartmentName))
+            : "Select Department...";
+    }
+
+}
+
+
+
+
+
+
+
+
+
+ *@

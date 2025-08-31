@@ -1,0 +1,1064 @@
+﻿@page "/testemployeelist/create"
+@page "/testemployeelist/edit/{EmployeeId?}"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@using System.Text.RegularExpressions
+@using AttendancePayrollWebServerApp.Service.IService
+@inject EmployeeGateway _employeeGateway
+@inject CompanyGateway _companyGateway
+@inject DepartmentGateway _departmentGateway
+@inject ShiftDetailGateway _shiftGateway
+@inject SalarySectionGateway _salarySectionGateway
+@inject SectionGateway _sectionGateway
+@inject DesignationGateway _designationGateway
+@inject CategoryItemGateway _categoryItemGateway
+@inject NavigationManager _navigationManager
+@inject ShiftMasterGateway _shiftMasterGateway
+@inject IFileUpload _fileUpload
+@inject IWebHostEnvironment _webHostEnvironment
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="@($"{baseUrl}css/ResponsiveScreen.css")">
+
+<div style="margin-left: -1rem;">
+    <h2 class="title text-primary ">Employee Information</h2>
+</div>
+
+    <EditForm  Model="employee" OnValidSubmit="UpsertEmployee" method="post">
+         <DataAnnotationsValidator />
+    <div id="parent">
+
+        @*  -----------------------------Right Part------------------------------------- *@
+        @*  -----------------------------Right Part------------------------------------- *@
+        <div class="div-control">
+
+        <div class="child">
+            <label for="name">Emp Id</label>
+            @if (title == "Entry")
+            {
+                <InputText @bind-Value="employee.EmployeeId" class="form-control"></InputText>
+            }
+            else
+            {
+                <InputText @bind-Value="employee.EmployeeId" class="form-control " style=" background-color: gray;color: white" disabled></InputText>
+            }
+        </div>
+
+
+        <div class="child">
+            <label for="name">Name</label>
+                <InputText @bind-Value="employee.EmployeeName" class="form-control" ></InputText>
+        </div>
+
+
+        <div class="child">
+            <label for="name">Company</label>
+                <InputSelect @bind-Value="employee.CompanyId" class="form-select light-violet" >
+                <option value="0" disabled="disabled" selected>-- Select Company --</option>
+                @foreach (var items in companeis)
+                {
+                    <option value="@items.CompanyId">@items.CompanyName</option>
+                }
+            </InputSelect>
+        </div>
+
+
+        <div class="child">
+            <label for="name">Department</label>
+            <InputSelect @bind-Value="employee.DepartmentId" class="form-select">
+                <option value="0" disabled="disabled" selected>-- Select Department --</option>
+                @foreach (var items in departments)
+                {
+                    <option value="@items.DepartmentId">@items.DepartmentName</option>
+                }
+            </InputSelect>
+        </div>
+
+
+        <div class="child">
+            <label for="name">Section</label>
+                <InputSelect @bind-Value="employee.SectionId" class="form-select" >
+                    <option value="0" disabled="disabled" selected>-- Select Section --</option>
+                    @foreach (var items in sections)
+                    {
+                        <option value="@items.SectionId">@items.SectionName</option>
+                    }
+                </InputSelect>
+        </div>
+
+        <div class="child">
+                <label for="name">Sub Section</label>
+                <InputSelect @bind-Value="employee.SalarySectionId" class="form-select">
+                    <option value="0" disabled="disabled" selected>-- Salary Section --</option>
+                    @foreach (var items in salarySections)
+                    {
+                        <option value="@items.SalarySectionId">@items.SalarySectionName</option>
+                    }
+                </InputSelect>
+        </div>
+
+        <div class="child">
+                <label for="name">App Type</label>
+                <InputSelect @bind-Value="employee.AppointmentType" class="form-select " >
+                    <option value="0" disabled="disabled" selected> -- Appointment Type --</option>
+                    <option value="Contractual">Contractual</option>
+                    <option value="ABC">ABC</option>
+                </InputSelect>
+        </div>
+
+        <div class="child">
+                <label for="name">Designation</label>
+                <InputSelect @bind-Value="employee.DesignationId" class="form-select" >
+                    <option value="0" disabled="disabled" selected>-- Select Designation --</option>
+                    @foreach (var items in designations)
+                    {
+                        <option value="@items.DesignationId">@items.DesignationName</option>
+                    }
+                </InputSelect>
+        </div>
+
+        <div class="child">
+            <div class="col-12">
+                <div class="form-check form-check-inline">
+                    <input type="radio"
+                            class="form-check-input"
+                            name="shiftOption"
+                            value="shifttype"
+                            checked="@(selectedShiftOption == "shifttype")"
+                            @onchange="OnShiftOptionChanged" />
+                    <label class="form-check-label">Shifting</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio"
+                            class="form-check-input"
+                            name="shiftOption"
+                            value="shiftname"
+                            checked="@(selectedShiftOption == "shiftname")"
+                            @onchange="OnShiftOptionChanged" />
+                    <label class="form-check-label">General</label>
+                       
+                </div>
+            </div>
+        </div>
+
+        @if (selectedShiftOption == "shifttype")
+            {
+                <div class="child">
+                    <label for="name">Shifting</label>
+                        <select @onchange="ShiftingChangedd" class="form-select">
+                             <option value="0"
+                                    disabled="@(employee?.EmployeeId != null )"
+                                    selected=@(employee?.ShiftTypeMasterId == null)> -- Shifting Type--
+                             </option>
+                            @if (shiftMtTypes != null)
+                            {
+                                @foreach (var items in shiftMtTypes)
+                                {
+                                    <option value="@items.ShiftTypeMasterId"
+                                            selected="@(employee?.ShiftTypeMasterId == items.ShiftTypeMasterId)">
+                                        @items.ShiftType
+                                    </option>
+                                }
+                            }
+                        </select>
+                </div>
+            }
+
+        @if (selectedShiftOption == "shiftname")
+        {
+                <div class="child">
+                    <label for="name">General</label>
+                    <select @onchange="GeneralChangedd" class="form-select">
+                            <option value="0"
+                                    disabled="@(employee?.EmployeeId != null || employee?.EmployeeId == null )"
+                                    selected=@(employee?.ShiftDetailId == null)> -- Shift Name --
+                            </option>
+                        @if (shiftDetails != null)
+                        {
+                            @foreach (var items in shiftDetails)
+                            {
+                                <option value="@items.ShiftDetailId"
+                                        selected="@(employee?.ShiftDetailId == items.ShiftDetailId)">
+                                    @items.ShiftName
+                                </option>
+                            }
+                        }
+                    </select>
+            </div>
+        }
+
+        <div class="child">
+                <div class="child2">
+                    <label for="name">Emp Type</label>
+                    <InputSelect @bind-Value="employee.EmployeeTypeCatItemId" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+
+                        @foreach (var items in employeeTypeCategoryItems)
+                        {
+                            <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="child2">
+                    <label for="name">Floor</label>
+                    <InputSelect @bind-Value="employee.FloorCatItemId" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        @foreach (var items in floorCategoryItems)
+                        {
+                            <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                        }
+                    </InputSelect>
+                </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Pay Source</label>
+                    <InputSelect @bind-Value="employee.PaySource" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Bank">Bank</option>
+                        <option value="Cash">Cash</option>
+                    </InputSelect>
+            </div>
+
+            <div class="child2">
+                    <label for="name">Line</label>
+                    <InputSelect @bind-Value="employee.LineCatItemId" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        @foreach (var items in lineCategoryItems)
+                        {
+                            <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                        }
+                    </InputSelect>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Basic Sal</label>
+                    <InputNumber @bind-Value="employee.BasicSalary" class="form-control">
+                    </InputNumber>
+            </div>
+
+            <div class="child2">
+                    <label for="name">Salary</label>
+                    <InputNumber @bind-Value="employee.Salary" class="form-control">
+                    </InputNumber>
+            </div>
+        </div>
+
+        <div class="child">
+                <label for="name">Join Date</label>
+                <InputDate @bind-Value="employee.JoinDate" class="form-control"></InputDate>
+        </div>
+
+        <div class="child">
+                <label for="name">Card No</label>
+                <InputText @bind-Value="employee.CardID" class="form-control"></InputText>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Overtime</label>
+                    <InputSelect @bind-Value="employee.OverTimeYN" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
+                    </InputSelect>
+            </div>
+            <div class="child2">
+                    <label for="name">Lunch</label>
+                    <InputSelect @bind-Value="employee.LunchYN" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
+                    </InputSelect>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Transport</label>
+                    <InputSelect @bind-Value="employee.TransportYN" class="form-select" >
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
+                    </InputSelect>
+            </div>
+            <div class="child2">
+                    <label for="name">Active</label>
+                    <InputText @bind-Value="employee.ActiveYN" class="form-control " style=" background-color: gray; color: white" disabled>
+                    </InputText>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">PF</label>
+                <InputSelect @bind-Value="employee.ProvidentFundYN" class="form-select">
+                            <option value="0" disabled="disabled" selected>--Select--</option>
+                            <option value="Y">Y</option>
+                            <option value="N">N</option>
+                        </InputSelect>
+            </div>
+            <div class="child2">
+                    <label for="name">BGMEAID</label>
+                    <InputText @bind-Value="employee.BGMEAID" class="form-control">
+                    </InputText>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Registration</label>
+                    <InputText @bind-Value="employee.RegistrationNo" class="form-control">
+                    </InputText>
+            </div>
+            <div class="child2">
+                    <label for="name">TIN</label>
+                    <InputText @bind-Value="employee.TinNo" class="form-control">
+                    </InputText>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                <label for="name">Confirm</label>
+                    <InputText @bind-Value="employee.ConfirmYN" class="form-control" style=" background-color: gray; color: white" disabled>
+                </InputText>
+            </div>
+            <div class="child2">
+                <label for="name">Conf.Date</label>
+                <InputDate @bind-Value="employee.ConfirmDate" class="date-control" disabled>
+                </InputDate>
+            </div>
+        </div>
+
+        <div class="child">
+            <div class="child2">
+                <label for="name">Release</label>
+                    <InputText @bind-Value="employee.ReleaseYN" class="form-control" style=" background-color: gray; color: white" disabled>
+                </InputText>
+            </div>
+            <div class="child2">
+                <label for="name">Rels.Date</label>
+                <InputDate @bind-Value="employee.ReleaseDate" class="date-control" disabled>
+                </InputDate>
+            </div>
+        </div>
+
+        <div class="child">
+                <label for="name">Bank</label>
+                <InputText @bind-Value="employee.BankName" class="form-control " style=" background-color: gray; color: white" disabled>
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">Bank Acc.</label>
+            <InputText @bind-Value="employee.BankAccNo" class="form-control " style=" background-color: gray; color: white" disabled>
+            </InputText>
+        </div>
+    </div>
+
+
+        @*  -----------------------------Middle Part------------------------------------- *@
+        @*  -----------------------------Middle Part------------------------------------- *@
+
+
+    <div class="div-control">
+
+        <div class="child">
+            <div class="child2">
+                    <label for="name">Gender</label>
+                <InputSelect @bind-Value="employee.Sex" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                </InputSelect>
+            </div>
+            <div class="child2">
+                    <label for="name">Religion</label>
+                    <InputSelect @bind-Value="employee.Religion" class="form-select">
+                        <option value="0" disabled="disabled" selected>--Select--</option>
+                        <option value="Buddist">Buddist</option>
+                        <option value="Cristian">Cristian</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Sanatan">Sanatan</option>
+                </InputSelect>
+            </div>
+        </div>
+
+        <div class="child">
+                <label for="name">M.Status</label>
+                <InputSelect @bind-Value="employee.MaritalStatus" class="form-select">
+                    <option value="0" disabled="disabled" selected>-- Select Marital Status --</option>
+                    <option value="Married">Married</option>
+                    <option value="Unmarried">Unmarried</option>
+                </InputSelect>
+        </div>
+
+        <div class="child">
+            <label for="name">P.Strength</label>
+            <InputText @bind-Value="employee.PhysicalStrength" class="form-control">
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">Experience</label>
+            <InputText @bind-Value="employee.Experience" class="form-control">
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">D.of Birth</label>
+            <InputDate @bind-Value="employee.DateOfBirth" class="form-control"></InputDate>
+        </div>
+
+        <div class="child">
+                <label for="name">Mobile No</label>
+                <InputText @bind-Value="employee.MobileNo" class="form-control" >
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">EMG.Cont</label>
+            <InputText @bind-Value="employee.EmergencyContact" class="form-control" >
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">National Id</label>
+            <InputText @bind-Value="employee.NID" class="form-control" >
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">Birth Cert.</label>
+            <InputText @bind-Value="employee.BirthCertificateNo" class="form-control" >
+            </InputText>
+        </div>
+
+            <div class="child">
+            <label for="name">Passport No</label>
+            <InputText @bind-Value="employee.PassportNo" class="form-control">
+            </InputText>
+        </div>
+
+        <div class="child">
+            <label for="name">Serv.Book</label>
+            <InputText @bind-Value="employee.DrivingLicenseNo" class="form-control">
+            </InputText>
+        </div>
+           
+     
+          
+
+
+         
+
+         
+
+
+
+      
+
+        
+
+    </div>
+
+
+        @*  -----------------------------Right Part------------------------------------- *@
+        @*  -----------------------------Right Part------------------------------------- *@
+
+
+    <div class="div-control">
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control"  />
+    </div>
+
+
+       @* 
+        <div class="child">
+            <label for="name">Name:</label>
+            <input type="text" id="name" class="form-control" @bind="name" />
+        </div>
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div>
+        <div class="child">
+            <label for="email">Email:</label>
+            <input type="email" id="email" class="form-control" @bind="email" />
+        </div> 
+        *@
+
+    </div>
+</div>
+ </EditForm>
+
+
+
+
+
+
+
+
+
+@code {
+    [Parameter]
+    public string EmployeeId { get; set; }
+    private Employee employee { get; set; } = new Employee()
+        {
+            ImmageUrl = "/images/Default_image.png"
+        };
+
+    private string baseUrl;
+    private List<Employee> employees { get; set; } = new List<Employee>();
+    private List<Company> companeis { get; set; } = new List<Company>();
+    private List<Department> departments { get; set; } = new List<Department>();
+    private List<ShiftDetail> shiftDetails { get; set; } = new List<ShiftDetail>();
+    private List<ShiftMaster> shiftMasters { get; set; } = new List<ShiftMaster>();
+    private List<ShiftMaster> shiftMtTypes { get; set; } = new List<ShiftMaster>();
+    private List<Section> sections { get; set; } = new List<Section>();
+    private List<SalarySection> salarySections { get; set; } = new List<SalarySection>();
+    private List<Designation> designations { get; set; } = new List<Designation>();
+    private List<CategoryItem> lineCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> educationCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> employeeTypeCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> floorCategoryItems { get; set; } = new List<CategoryItem>();
+    public string? oldImageUrl_FromDataTable { get; set;}
+    private string? selectedShiftOption  { get; set; } //= "name"; // Default to shift name
+    private string? tempImmageLocation { get; set; } = null;
+
+    DateTime defaultDate = DateTime.Parse("1900-01-01");
+    private String title { get; set; } = "Entry";
+    private bool IsLoading { get; set; }
+    int lineCatId = 5;
+    int educationCatId = 6;
+    int employeeTypeCatId = 3;
+    int floorCatId = 4;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            if (EmployeeId is null)
+            {
+                selectedShiftOption = "shifttype";
+                await LoadEmployee();
+                //selectedShiftOption = "name";
+                StateHasChanged();
+
+            }
+            else
+            {
+                title = "Update";
+                await LoadEmployeeByID();
+                if (employee.ShiftDetailId==null && employee.ShiftDetailId is null)  //shiftting 
+                {
+                    selectedShiftOption = "shifttype"; 
+                }
+                else                    //General
+                {
+                    selectedShiftOption = "shiftname";
+                }
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnShiftOptionChanged(ChangeEventArgs e)
+    {
+        selectedShiftOption = e.Value?.ToString() ?? "shifttype";
+        StateHasChanged();
+    }
+
+    async Task ShiftingChangedd(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newValue))
+        {
+            employee.ShiftTypeMasterId = newValue;
+            employee.ShiftDetailId = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private int shiftDtid { get; set; } = 0;
+    async Task GeneralChangedd(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newValue))
+        {
+            shiftDtid = newValue;
+            employee.ShiftDetailId = shiftDtid;
+            int shiftTypeMtId = await _shiftGateway.GetShifTypeMtid(newValue);
+            employee.ShiftTypeMasterId = shiftTypeMtId;
+        }
+    }
+
+    private async Task LoadEmployee()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employee.DateOfBirth = DateTime.Now;
+        employee.JoinDate = DateTime.Now;
+        employees = await _employeeGateway.GetEmployeeList();
+        await SetEmployeeCommonItem( employee);
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    //  private async Task LoadEmployeeByID()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     employee = await _employeeGateway.GetEmployee(EmployeeId);
+    //     await SetEmployeeCommonItem(employee);
+    //     oldImageUrl_FromDataTable = employee.ImmageUrl;
+
+    //     tempImmageLocation = oldImageUrl_FromDataTable;
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+    private async Task LoadEmployeeByID()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employee = await _employeeGateway.GetEmployee(EmployeeId);
+        await SetEmployeeCommonItem(employee);
+
+        oldImageUrl_FromDataTable = employee.ImmageUrl;
+
+        string n = oldImageUrl_FromDataTable;
+        tempImmageLocation = $"{baseUrl}/{n.TrimStart('/')}";
+
+        //tempImmageLocation = oldImageUrl_FromDataTable;
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+    // string baseUrl = "https://example.com"; // Replace with your actual base URL
+    // tempImmageLocation = oldImageUrl_FromDataTable;
+
+
+    // string fullUrl = $"{baseUrl}/{tempImmageLocation.TrimStart('/')}";
+
+
+
+    //  private async Task LoadShiftMasterData()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     ShiftsMasters = await _shiftMasterGateway.GetShiftMasterList();
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+
+
+    private async Task SetEmployeeCommonItem(Employee employee)
+    {
+        companeis = await _companyGateway.GetCompanyList();
+        departments = await _departmentGateway.GetDepartmentsList();
+        shiftMtTypes = await _shiftMasterGateway.GetTypeShiftingList();
+        shiftDetails=await _shiftGateway.GetGeneralNameList();
+        sections = await _sectionGateway.GetSectionList();
+        salarySections = await _salarySectionGateway.GetSalarySectionList();
+        designations = await _designationGateway.GetDesignationList();
+        var categoryItems = await _categoryItemGateway.GetCategoryItemList();
+        lineCategoryItems = categoryItems.Where(data => data.CategoryId == lineCatId).ToList();
+        educationCategoryItems = categoryItems.Where(data => data.CategoryId == educationCatId).ToList();
+        employeeTypeCategoryItems = categoryItems.Where(data => data.CategoryId == employeeTypeCatId).ToList();
+        floorCategoryItems = categoryItems.Where(data => data.CategoryId == floorCatId).ToList();
+    }
+
+
+    private void NavigateToCreate()
+    {
+        _navigationManager.NavigateTo("/testemployeelist/create");
+    }
+
+    private async Task UpsertEmployee()
+    {
+
+        if (title == "Entry")
+        {
+             var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+             var employeeFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+        if (!string.IsNullOrEmpty(tempImmageLocation))
+        {
+            // Extract the filename from the tempImmageLocation
+            var fileName = Path.GetFileName(tempImmageLocation);
+            // Define source and destination file paths
+            var sourcePath = Path.Combine(tempFolderDirectory, fileName);
+            var destinationPath = Path.Combine(employeeFolderDirectory, fileName);
+            // Copy the file
+
+            if (File.Exists(sourcePath))
+            {
+                File.Copy(sourcePath, destinationPath, true);
+                // Update the employee's image URL
+                employee.ImmageUrl = $"/images/employee/{fileName}";
+                // Optional: Remove the temporary file after copying
+                File.Delete(sourcePath);
+            }
+        }
+       
+            ///*************/
+            bool isExist = await _employeeGateway.IsExist(employee.EmployeeId);
+            if (isExist)
+            {
+                await _jsRuntime.ToastrError("Employee Id already exists");
+                return;
+            }
+
+            employee = new Employee
+                {
+                    EmployeeId = employee.EmployeeId,
+                    EmployeeName = employee.EmployeeName,
+                    DesignationId = employee.DesignationId,
+                    CompanyId = employee.CompanyId,
+                    DepartmentId = employee.DepartmentId,
+                    SectionId = employee.SectionId,
+                    SalarySectionId = employee.SalarySectionId,
+                    FloorCatItemId = employee.FloorCatItemId,
+                    LineCatItemId = employee.LineCatItemId,
+                    ShiftTypeMasterId = employee.ShiftTypeMasterId,
+                    ShiftDetailId = employee.ShiftDetailId,
+                    Sex = employee.Sex,
+                    DateOfBirth = employee.DateOfBirth,
+                    Religion = employee.Religion,
+                    Blood = employee.Blood,
+                    MobileNo = employee.MobileNo,
+                    EmergencyContact = employee.EmergencyContact,
+                    Mail = employee.Mail,
+                    EmployeeNameBan = employee.EmployeeNameBan,
+                    FatherName = employee.FatherName,
+                    MotherName = employee.MotherName,
+                    SpouseName = employee.SpouseName,
+                    FatherNameBan = employee.FatherNameBan,
+                    MotherNameBan = employee.MotherNameBan,
+                    SpouseNameBan = employee.SpouseNameBan,
+                    PermanentAddress = employee.PermanentAddress,
+                    PermanentAddressBan = employee.PermanentAddressBan,
+                    PresentAddress = employee.PresentAddress,
+                    PresentAddressBan = employee.PresentAddressBan,
+                    MaritalStatus = employee.MaritalStatus,
+                    NID = employee.NID,
+                    BirthCertificateNo = employee.BirthCertificateNo,
+                    PassportNo = employee.PassportNo,
+                    DrivingLicenseNo = employee.DrivingLicenseNo,
+                    BodySign = employee.BodySign,
+                    JoinDate = employee.JoinDate,
+                    ReleaseYN = "N",
+                    ReleaseDate = defaultDate,
+                    Salary = employee.Salary,
+                    BasicSalary = employee.BasicSalary,
+                    OverTimeYN = employee.OverTimeYN,
+                    LunchYN = employee.LunchYN,
+                    ConfirmYN = "",
+                    ConfirmDate = defaultDate,
+                    TransportYN = employee.TransportYN,
+                    PaySource = employee.PaySource,
+                    ActiveYN = "Y",
+                    CardID = employee.CardID,
+                    SN = ExtractNumericPart(employee.EmployeeId),
+                    //SN = Convert.ToDecimal(employee.EmployeeId),
+                    EmployeeTypeCatItemId = employee.EmployeeTypeCatItemId,
+                    AppointmentType = employee.AppointmentType,
+                    HeistEducationCatItemId = employee.HeistEducationCatItemId,
+                    ProvidentFundYN = employee.ProvidentFundYN,
+                    SalaryBuyer = 1000,
+                    JoiningDateBuyer = defaultDate,
+                    BuyerShow = "Y",
+                    BankName = "",
+                    BankAccNo = "",
+                    BGMEAID = employee.BGMEAID,
+                    TinNo = employee.TinNo,
+                    RegistrationNo = employee.RegistrationNo,
+                    PhysicalStrength = employee.PhysicalStrength,
+                    Experience = employee.Experience,
+                    ImmageUrl=employee.ImmageUrl
+                };
+            var result = await _employeeGateway.Save(employee);
+            if (result.Type == "success")
+            {
+                employees.Add(employee);
+                await _jsRuntime.ToastrSuccess(result.Message);
+                ResetEmployeeData();
+            }
+            else
+            {
+                await _jsRuntime.ToastrError(result.Message);
+            }
+        }
+
+
+        //Update
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                        var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                        var employeeFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+                // var tempFolderDirectory = $"{baseUrl}{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                // var employeeFolderDirectory = $"{baseUrl}{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+                
+
+                        if (!string.IsNullOrEmpty(tempImmageLocation))
+                        {
+                            // Extract the filename from the tempImmageLocation
+                            var fileName = Path.GetFileName(tempImmageLocation);
+                            // Define source and destination file paths
+                            var sourcePath = Path.Combine(tempFolderDirectory, fileName);
+                            var destinationPath = Path.Combine(employeeFolderDirectory, fileName);
+                            // Copy the file
+                            
+
+                            if (File.Exists(sourcePath))
+                            {
+                                File.Copy(sourcePath, destinationPath, true);
+                                // Update the employee's image URL
+                                employee.ImmageUrl = $"/images/employee/{fileName}";
+                                // Optional: Remove the temporary file after copying
+                                File.Delete(sourcePath);
+                            }
+                            // else
+                            // {
+                            //     await _jsRuntime.ToastrWarning("Temporary image file not found.");
+                            //     return;
+                            // }
+                        }
+                        //  var fileName = Path.GetFileName(tempImmageLocation);
+
+
+                employee = new Employee
+                                {
+                                    EmployeeId = employee.EmployeeId,
+                                    EmployeeName = employee.EmployeeName,
+                                    DesignationId = employee.DesignationId,
+                                    CompanyId = employee.CompanyId,
+                                    DepartmentId = employee.DepartmentId,
+                                    SectionId = employee.SectionId,
+                                    SalarySectionId = employee.SalarySectionId,
+                                    FloorCatItemId = employee.FloorCatItemId,
+                                    LineCatItemId = employee.LineCatItemId,
+                                    ShiftTypeMasterId = employee.ShiftTypeMasterId,
+                                    ShiftDetailId = employee.ShiftDetailId,
+                                    Sex = employee.Sex,
+                                    DateOfBirth = employee.DateOfBirth,
+                                    Religion = employee.Religion,
+                                    Blood = employee.Blood,
+                                    MobileNo = employee.MobileNo,
+                                    EmergencyContact = employee.EmergencyContact,
+                                    Mail = employee.Mail,
+                                    EmployeeNameBan = employee.EmployeeNameBan,
+                                    FatherName = employee.FatherName,
+                                    MotherName = employee.MotherName,
+                                    SpouseName = employee.SpouseName,
+                                    FatherNameBan = employee.FatherNameBan,
+                                    MotherNameBan = employee.MotherNameBan,
+                                    SpouseNameBan = employee.SpouseNameBan,
+                                    PermanentAddress = employee.PermanentAddress,
+                                    PermanentAddressBan = employee.PermanentAddressBan,
+                                    PresentAddress = employee.PresentAddress,
+                                    PresentAddressBan = employee.PresentAddressBan,
+                                    MaritalStatus = employee.MaritalStatus,
+                                    NID = employee.NID,
+                                    BirthCertificateNo = employee.BirthCertificateNo,
+                                    PassportNo = employee.PassportNo,
+                                    DrivingLicenseNo = employee.DrivingLicenseNo,
+                                    BodySign = employee.BodySign,
+                                    JoinDate = employee.JoinDate,
+                                    ReleaseYN = "N",
+                                    ReleaseDate = defaultDate,
+                                    Salary = employee.Salary,
+                                    BasicSalary = employee.BasicSalary,
+                                    OverTimeYN = employee.OverTimeYN,
+                                    LunchYN = employee.LunchYN,
+                                    ConfirmYN = "",
+                                    ConfirmDate = defaultDate,
+                                    TransportYN = employee.TransportYN,
+                                    PaySource = employee.PaySource,
+                                    ActiveYN = "Y",
+                                    CardID = employee.CardID,
+                                    //SN = Convert.ToDecimal(employee.EmployeeId),
+                                    SN = ExtractNumericPart(employee.EmployeeId),
+                                    EmployeeTypeCatItemId = employee.EmployeeTypeCatItemId,
+                                    AppointmentType = employee.AppointmentType,
+                                    HeistEducationCatItemId = employee.HeistEducationCatItemId,
+                                    ProvidentFundYN = employee.ProvidentFundYN,
+                                    SalaryBuyer = 1000,
+                                    JoiningDateBuyer = defaultDate,
+                                    BuyerShow = "Y",
+                                    BankName = "",
+                                    BankAccNo = "",
+                                    BGMEAID = employee.BGMEAID,
+                                    TinNo = employee.TinNo,
+                                    RegistrationNo = employee.RegistrationNo,
+                                    PhysicalStrength = employee.PhysicalStrength,
+                                    Experience = employee.Experience,
+                                    ImmageUrl=employee.ImmageUrl
+                                };
+
+
+
+                if(oldImageUrl_FromDataTable != employee.ImmageUrl)
+                {
+                    _fileUpload.DeleteFile(oldImageUrl_FromDataTable);
+                }
+
+                await _employeeGateway.Edit(employee);
+                employees.Add(employee);
+                await _jsRuntime.ToastrSuccess("Employee Updated Successfully");
+            }
+
+            else
+            {
+                await LoadEmployeeByID();
+            }
+
+        }
+    }
+
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        //File.Delete(tempImmageLocation);
+        IsLoading = true;
+        try
+        {
+            if (e.GetMultipleFiles().Count > 0)
+            {
+                foreach (var file in e.GetMultipleFiles())
+                {
+                    System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
+                    if (
+                            fileInfo.Extension.ToLower() == ".jpg" ||
+                            fileInfo.Extension.ToLower() == ".png" ||
+                            fileInfo.Extension.ToLower() == ".jpeg"
+                        )
+                    {
+                        //employee.ImmageUrl = await _fileUpload.UploadFile(file);
+                        var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                        DeleteAllFilesInDirectory(tempFolderDirectory);
+
+                        //  _fileUpload.DeleteFile(tempImmageLocation);
+
+                        tempImmageLocation = await _fileUpload.UploadFile(file);
+
+                    }
+                    else
+                    {
+                        await _jsRuntime.ToastrError("Please select .jpg/.jpeg/.png file only");
+                        return;
+                    }
+                }
+            }
+            IsLoading = false;
+        }
+        catch (Exception ex)
+        {
+            await _jsRuntime.ToastrError(ex.Message);
+        }
+    }
+
+    // New method to delete all files in a directory
+
+
+
+    private void DeleteAllFilesInDirectory(string directoryPath)
+    {
+        try
+        {
+            // Ensure the directory exists
+            if (Directory.Exists(directoryPath))
+            {
+                // Delete all files in the directory
+                string[] files = Directory.GetFiles(directoryPath);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            }
+            else
+            {
+                // Optionally create the directory if it doesn't exist
+                Directory.CreateDirectory(directoryPath);
+            }
+        }
+
+
+        catch (Exception ex)
+        {
+            // Log or handle the exception as needed
+            // You might want to add logging or error handling here
+            Console.WriteLine($"Error deleting files in {directoryPath}: {ex.Message}");
+        }
+    }
+
+
+
+
+
+    // private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    // {
+    //     //File.Delete(tempImmageLocation);
+    //     IsLoading = true;
+    //     try
+    //     {
+    //         if(e.GetMultipleFiles().Count > 0)
+    //         {
+    //             foreach (var file in e.GetMultipleFiles())
+    //             {
+    //                 System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
+    //                 if (
+    //                         fileInfo.Extension.ToLower() == ".jpg" ||
+    //                         fileInfo.Extension.ToLower() == ".png" ||
+    //                         fileInfo.Extension.ToLower() == ".jpeg"
+    //                     )
+    //                 {
+    //                     //employee.ImmageUrl = await _fileUpload.UploadFile(file);
+    //                     _fileUpload.DeleteFile(tempImmageLocation);
+    //                     tempImmageLocation = await _fileUpload.UploadFile(file);
+
+    //                 }
+    //                 else
+    //                 {
+    //                     await _jsRuntime.ToastrError("Please select .jpg/.jpeg/.png file only");
+    //                     return;
+    //                 }
+    //             }
+    //         }
+    //         IsLoading = false;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         await _jsRuntime.ToastrError(ex.Message);
+    //     }
+    // }
+
+    private static decimal ExtractNumericPart(string input)
+    {
+        string numericPart = Regex.Match(input, @"\d+").Value;
+        return string.IsNullOrEmpty(numericPart) ? 0 : Convert.ToDecimal(numericPart);
+    }
+    private void ResetEmployeeData()
+    {
+        employee = new Employee();
+        shiftDtid = 0;
+        employee.DateOfBirth = DateTime.Now;
+        employee.JoinDate = DateTime.Now;
+        tempImmageLocation = null;
+    }
+}
+

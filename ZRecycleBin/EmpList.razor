@@ -1,0 +1,133 @@
+﻿
+
+@page "/employeelist"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@inject EmployeeGateway _employeeGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+
+
+
+
+
+
+<div class="row mt-4">
+    <div class="col-6">
+        <h4 class="card-title text-info">List of Employee</h4>
+    </div>
+    <div class="col-4 offset-2">
+        <a href="quotation/create" class="btn btn-primary form-control">Add New Employee</a>
+    </div>
+    <div class="col-12 p-3">
+        @if (employees.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Emp No</th>
+                        <th>Emp Name</th>
+
+
+                       @*  <th>Actions</th> *@
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in employees)
+                        {
+                        <tr>
+                            <td>
+                                @item.EmpIoyeeId
+                            </td>
+
+                            <td>
+                                @item.EmpIoyeeName
+                            </td>
+
+
+                        @* 
+                            <td>
+                                <NavLink href="@($"quotation/edit/{objQuotation.QuotationId}")" class="btn-primary btn">Edit</NavLink>
+                                <NavLink href="@($"quotation/addproducts/{objQuotation.QuotationId}")" class="btn-primary btn">Items</NavLink>
+                                <button class="btn btn-danger" @onclick="()=>HandleDelete(objQuotation.QuotationId)">Delete</button>
+                            </td>
+                        *@ 
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        else
+        {
+            if (IsLoading)
+            {
+                //Loading gif
+                <div class="text-center">
+                    <img src="/images/Glass spheres.gif">
+                </div>
+            }
+
+            else
+            {
+                //no records
+                <p>No Records Found.</p>
+            }
+        }
+    </div>
+</div>
+
+
+
+
+
+
+@code {
+    private List<Employee> employees { get; set; } = new List<Employee>();
+    private bool IsLoading { get; set; }
+  //  private int DeleteEmployeeId { get; set; } = 0;
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+            await LoadEmployees();
+            }
+        }
+
+    private async Task LoadEmployees()
+        {
+            IsLoading = true;
+            StateHasChanged();
+            employees = await _employeeGateway.GetEmployeeList();
+            IsLoading = false;
+            StateHasChanged();
+        }
+       
+
+
+
+
+    // private void HandleDelete(int id)
+    // {
+    //     DeleteQuotationId = id;
+    //     _jsRuntime.InvokeVoidAsync("ShowDeleteConfirmationModal"); //This Function doesn't return anything thats why InvokeVoidAsync is used//
+    // }
+    // public async Task ConfirmTask_Click(bool isConfirmed)
+    // {
+    //     IsLoading = true;
+    //     if (isConfirmed && DeleteQuotationId != 0)
+    //     {
+    //         await LoadQuatations();
+    //         await _jsRuntime.InvokeVoidAsync("HideDeleteConfirmationModal");
+    //     }
+    //     IsLoading = false;
+    // }
+
+
+
+}
+
+
+

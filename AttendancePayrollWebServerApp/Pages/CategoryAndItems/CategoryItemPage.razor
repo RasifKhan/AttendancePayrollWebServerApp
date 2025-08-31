@@ -1,0 +1,303 @@
+﻿@page "/categoryItempage"
+@using AttendancePayrollWebServerApp.Helper
+@inject CategoryItemGateway _categoryItemGateway
+@inject CategoryGateway _categoryGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+
+
+
+<div class="row my-0">
+           <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Category Item</h3>
+        @if (title != "Create")
+        {
+                                    <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                            style="outline: none; width:auto;">
+                                        Add New Category Item
+                                    </button>
+        }
+          </div>
+
+              <div class="col-10 row my-0"  >
+                  <EditForm Model="@categoryItem" OnValidSubmit="@UpsertCategoryItem">
+                    <DataAnnotationsValidator />
+                   <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+
+                       
+                        <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Item Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="categoryItem.CategoryItemName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>categoryItem.CategoryItemName"></ValidationMessage>
+                                </div>
+                           </div>
+
+                            <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Item Name Ban</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="categoryItem.CategoryItemNameBan"  class="form-control custom-input"></InputText>
+                                </div>
+                           </div>
+
+
+                           <div class="row my-1 align-items-center">
+                              <div class="col-3 custom-input">Category</div>
+                                <div class="col-9">
+                                    <InputSelect @bind-Value="categoryItem.CategoryId" class="form-select custom-input light-violet">
+                                        <option value="0" disabled="disabled" selected>--Select Category--</option>
+                                        @foreach (var items in categories)
+                                        {
+                                               <option value="@items.CategoryId">@items.CategoryName</option>
+                                        }
+                                    </InputSelect>
+                                    <ValidationMessage For="()=>categoryItem.CategoryId"></ValidationMessage>
+                                </div>
+                            </div>
+
+                    @*  <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 141px;  width:150px" >@title</button>   *@
+
+                </div>
+                </div>
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+<div class="row my-1"> 
+    @if (categoriesItems != null && categoriesItems.Any())
+    {
+                <DxGrid @ref="GridExp"
+                                    Data="@categoriesItems"
+                                    ShowGroupPanel="true"
+                                    ShowFilterRow="true"
+                                    ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                    CustomizeCellDisplayText="Grid_CustomizeCellDisplayText"
+                                    PageSizeSelectorVisible="true"
+                                    PageSizeSelectorAllRowsItemVisible="true"
+                                    PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                    PageSize="8" 
+                                    PagerPosition="GridPagerPosition.Bottom"
+                                    TextWrapEnabled="false"
+                                    FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                    ShowSearchBox="true"
+                                    AutoExpandAllGroupRows="true"
+                                    GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                    SelectionMode="GridSelectionMode.Multiple"
+                                    SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                    FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                    RowClick="OnRowClick"
+                                   >
+                                <Columns>
+                                        <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                        <DxGridDataColumn Caption="Item Name" FieldName="CategoryItemName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/> 
+                                        
+                                        <DxGridDataColumn Caption="Bangla Name" FieldName="CategoryItemNameBan" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                        <DxGridDataColumn Caption="Category Name" FieldName="CategoryId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                                </Columns>
+                                        <TotalSummary>
+                                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="CategoryItemName" />
+                                        </TotalSummary>
+                                </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                                        <div class="text-center">
+                                               @*  <img src="/images/Glass spheres.gif"> *@
+                                                 @* <img src="/images/Animation3.gif"> *@
+                                                <img src="@($"{baseUrl}/images/Animation3.gif")">
+                                        </div>
+        }
+        else
+        {
+        //no records
+                                           <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<CategoryItem> categoriesItems = new List<CategoryItem>();
+    private List<Category> categories { get; set; } = new List<Category>();
+    private string baseUrl;
+    private CategoryItem categoryItem { get; set; } = new CategoryItem();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadCategoryItem();
+        }
+    }
+
+
+    private async Task LoadCategoryItem()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        categoriesItems = await _categoryItemGateway.GetCategoryItemList();
+        categories = await _categoryGateway.GetCategoryList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadCategoryItemById()
+    {
+        StateHasChanged();
+        categoryItem = await _categoryItemGateway.GetCategoryItem(tempId);
+        categoryItem.CategoryItemName = categoryItem.CategoryItemName;
+        StateHasChanged();
+    }
+
+    private async Task UpsertCategoryItem()
+    {
+        bool isExist = await _categoryItemGateway.IsExist(categoryItem.CategoryItemName, categoryItem.CategoryItemId, categoryItem.CategoryId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Category Item already exists");
+            return;
+        }
+        if (title == "Create")
+        {
+            categoryItem = new CategoryItem
+                {
+                    CategoryItemName = categoryItem.CategoryItemName,
+                    CategoryId = categoryItem.CategoryId,
+                    CategoryItemNameBan = categoryItem.CategoryItemNameBan
+                };
+            await _categoryItemGateway.Save(categoryItem);
+            categoriesItems.Add(categoryItem);
+            await _jsRuntime.ToastrSuccess("Category Item Created Successfully");
+            await LoadCategoryItem();
+            await LoadCategoryItemById();
+            ResetData();
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the categoryItem if confirmed
+                categoryItem = new CategoryItem
+                    {
+                        CategoryItemId = tempId,
+                        CategoryItemName = categoryItem.CategoryItemName,
+                        CategoryId = categoryItem.CategoryId,
+                        CategoryItemNameBan = categoryItem.CategoryItemNameBan
+                    };
+                await _categoryItemGateway.Edit(categoryItem);
+                categoriesItems.Add(categoryItem);
+                await LoadCategoryItem();
+                await _jsRuntime.ToastrSuccess("Category Item Updated Successfully");
+            }
+            else
+            {
+                await LoadCategoryItem();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        categoryItem = new CategoryItem();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadCategoryItem();
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+
+
+
+
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "CategoryId")
+        {
+            e.DisplayText = categories.Where(c => c.CategoryId == (int)e.Value).First().CategoryName;
+        }
+    }
+
+
+    // void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    // {
+    //     if (e.FieldName == "CategoryName")
+    //     {
+    //         e.DisplayText = categories.Where(c => c.CategoryId == (int)e.Value).First().CategoryName;
+    //     }
+    // }
+
+
+
+
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as CategoryItem;
+        if (item != null)
+        {
+            tempId = item.CategoryItemId;
+        }
+
+        title = "Update";
+        await LoadCategoryItemById();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

@@ -1,0 +1,62 @@
+﻿@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+
+@code {
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        _timer = new Timer(_ =>
+        {
+            InvokeAsync(() =>
+            {
+                Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            });
+        }, null, TimeSpan.FromMinutes(20), TimeSpan.FromMinutes(0));
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
+
+
+
+
+
+
+@* 
+@code 
+{
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        // Check every 20 seconds
+        _timer = new Timer(async _ =>
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                await InvokeAsync(() =>
+                {
+                    Navigation.NavigateTo("/Login", forceLoad: true);
+                });
+            }
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(20));
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
+ *@
+
+
+

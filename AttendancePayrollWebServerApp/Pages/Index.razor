@@ -1,0 +1,309 @@
+﻿@page "/"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Models.View
+@using System.Drawing
+@inject AttendanceDashboardGateway _attendanceDashboardGateway
+@inject NavigationManager _navigationManager
+@inject ReportConstringGateway _reportConstringGateway
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+@if (HasNoData)
+
+{
+    <h3>No data found</h3>
+}
+
+else
+
+{
+    <div style="margin-left: -1.5rem; margin-right: -1.5rem; margin-top: -1rem; margin-bottom: -1.5rem;">
+        <div style="
+             padding: 1.1rem 2rem 0 0;
+             background-image:
+                 linear-gradient(to bottom, rgba(255, 255, 255, 0) 60%, #F5F5F5 105%),
+                 url('@(baseUrl + "images/istockphoto-1421053049-612x612.jpg")');
+             background-size: cover;
+             background-position: center;
+             background-repeat: no-repeat;
+             background-color: rgba(255, 255, 255, 0.8);
+             background-blend-mode: overlay;
+             backdrop-filter: blur(8px);
+             -webkit-backdrop-filter: blur(8px);">
+            <div style="margin-left: 2rem;">
+                <h3>@attendanceDate.ToString("dd-MMM-yyyy")</h3>
+            </div>
+            <DxPieChart T="StatusCount"
+                        Data="@ChartData"
+                        Width="100%"
+                        Height="400px"
+                        InnerDiameter="0.5"
+                        PointSelectionMode="ChartSelectionMode.Multiple"
+                        SelectionChanged="@OnSelectionChanged"
+                        CustomizeSeriesPoint="@CustomizePiePoint">
+                <DxPieChartSeries T="StatusCount"
+                                  TArgument="string"
+                                  TValue="int"
+                                  ArgumentField="@(d => d.Status)"
+                                  ValueField="@(d => d.Count)">
+                    <DxChartSeriesLabel Visible="true"
+                                        Position="RelativePosition.Outside">
+                        <DxChartSeriesLabelConnector Visible="true" />
+                    </DxChartSeriesLabel>
+                </DxPieChartSeries>
+                <DxChartLegend HorizontalAlignment="HorizontalAlignment.Right"
+                               VerticalAlignment="VerticalEdge.Top"
+                               Position="RelativePosition.Outside"
+                               Orientation="Orientation.Vertical" />
+            </DxPieChart>
+            <br />
+            <br />
+            <DxChart @ref="DetailChart"
+                     T="StatusCount"
+                     Data="@ChartData"
+                     Width="100%"
+                     Height="200px">
+                <DxChartCommonSeries SummaryMethod="Enumerable.Sum"
+                                     NameField="@((StatusCount s) => s.Status)"
+                                     ArgumentField="@(s => s.Status)"
+                                     ValueField="@((StatusCount s) => s.Count)"
+                                     Filter='@(s => Selection.Count == 0 || Selection.Contains(s.Status))'>
+                    <SeriesTemplate Context="settings">
+                        <DxChartBarSeries Settings="@settings"
+                                          Color="StatusColors[settings.Name]" />
+                    </SeriesTemplate>
+                </DxChartCommonSeries>
+                <DxChartValueAxis>
+                    <DxChartAxisLabel />
+                </DxChartValueAxis>
+                <DxChartTooltip Enabled="true"
+                                Position="RelativePosition.Outside">
+                    <div style="margin: 0.75rem">
+                        <div class="fw-bold">@context.Point.Argument</div>
+                        <div>Count: @context.Point.Value</div>
+                    </div>
+                </DxChartTooltip>
+                <DxChartLegend Position="RelativePosition.Outside"
+                               HorizontalAlignment="HorizontalAlignment.Center"
+                               VerticalAlignment="VerticalEdge.Bottom" />
+            </DxChart>
+        </div>
+    </div>
+}
+
+@* @page "/"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Models.View
+@using System.Drawing
+@inject AttendanceDashboardGateway _attendanceDashboardGateway
+@inject NavigationManager _navigationManager
+@inject ReportConstringGateway _reportConstringGateway
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+@if (HasNoData)
+{
+    <h3>No data found</h3>
+}
+else
+{
+  
+    <div style="margin-left: -1.5rem; margin-right: -1.5rem; margin-top: -1rem; margin-bottom: -1.5rem;">
+        <div  style="
+             padding: 1.1rem 2rem 0 0;
+             overflow: auto;
+              background-image:
+        linear-gradient(to bottom, rgba(255, 255, 255, 0) 60%, 	#F5F5F5 105%),
+        url('@(baseUrl + "images/istockphoto-1421053049-612x612.jpg")');
+             background-size: cover;
+             background-position: center;
+             background-repeat: no-repeat;
+             background-color: rgba(255, 255, 255, 0.8);
+             background-blend-mode: overlay;
+             backdrop-filter: blur(8px);
+             -webkit-backdrop-filter: blur(8px);">
+            <div  style="margin-left: 2rem;">
+             
+                <h3>@attendanceDate.ToString("dd-MMM-yyyy")</h3>
+            </div>
+            <DxPieChart T="StatusCount"
+                        Data="@ChartData"
+                        Width="100%"
+                        Height="400px"
+                        InnerDiameter="0.5"
+                        PointSelectionMode="ChartSelectionMode.Multiple"
+                        SelectionChanged="@OnSelectionChanged"
+                        CustomizeSeriesPoint="@CustomizePiePoint">
+                    <DxPieChartSeries T="StatusCount"
+                                  TArgument="string"
+                                  TValue="int"
+                                  ArgumentField="@(d => d.Status)"
+                                  ValueField="@(d => d.Count)">
+                    <DxChartSeriesLabel Visible="true"
+                                        Position="RelativePosition.Outside">
+                    <DxChartSeriesLabelConnector Visible="true" />
+                </DxChartSeriesLabel>
+                </DxPieChartSeries>
+                <DxChartLegend HorizontalAlignment="HorizontalAlignment.Right"
+                               VerticalAlignment="VerticalEdge.Top"
+                               Position="RelativePosition.Outside"
+                               Orientation="Orientation.Vertical" />
+            </DxPieChart>
+            <br />
+            <br />
+
+            <DxChart @ref="DetailChart"
+                     T="StatusCount"
+                     Data="@ChartData"
+                     Width="100%"
+                     Height="200px">
+
+                <DxChartCommonSeries SummaryMethod="Enumerable.Sum"
+                                     NameField="@((StatusCount s) => s.Status)"
+                                     ArgumentField="@(s => s.Status)"
+                                     ValueField="@((StatusCount s) => s.Count)"
+                                     Filter='@(s => Selection.Count == 0 || Selection.Contains(s.Status))'>
+                    <SeriesTemplate Context="settings">
+                        <DxChartBarSeries Settings="@settings"
+                                          Color="StatusColors[settings.Name]" />
+                    </SeriesTemplate>
+                </DxChartCommonSeries>
+
+
+                <DxChartValueAxis>
+                    <DxChartAxisLabel />
+                </DxChartValueAxis>
+                <DxChartTooltip Enabled="true"
+                                Position="RelativePosition.Outside">
+                    <div style="margin: 0.75rem">
+                        <div class="fw-bold">@context.Point.Argument</div>
+                        <div>Count: @context.Point.Value</div>
+                    </div>
+                </DxChartTooltip>
+                <DxChartLegend Position="RelativePosition.Outside"
+                               HorizontalAlignment="HorizontalAlignment.Center"
+                               VerticalAlignment="VerticalEdge.Bottom" />
+            </DxChart>
+        </div>
+    </div>
+}
+
+
+ *@
+
+
+
+@code {
+    private class StatusCount
+    {
+        public string Status { get; set; }
+        public int Count { get; set; }
+    }
+
+    private IEnumerable<StatusCount> ChartData;
+    private DxChart DetailChart;
+
+    private readonly AttendanceDashboardGateway _gateway = new();
+
+    private readonly List<string> Selection = new();
+
+    private DateOnly attendanceDate { get; set; }
+
+    private bool HasNoData { get; set; } = false;
+
+    private string baseUrl;
+
+
+
+
+    private string? reportConnectionString = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        baseUrl = _navigationManager.BaseUri;
+
+      //  reportConnectionString
+
+
+    }
+
+
+    private readonly Dictionary<string, Color> StatusColors = new()
+    {
+        { "Total Employee", Color.FromArgb(255, 33, 150, 243) },   // Blue
+        { "Present", Color.FromArgb(255, 76, 175, 80) },  // Green
+        { "Absent", Color.FromArgb  (255, 244, 67, 54) } , //REd            //(255, 175, 82, 69) },  CHocolate
+         { "Leave", Color.FromArgb(255, 255, 193, 7) },     // Amber
+        { "Late", Color.FromArgb(255, 95, 54, 141)  }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var summary = await _gateway.GetDashboardSummary();
+            // Check if all counts are zero
+            if (summary.EmployeeTotal == 0 &&
+                summary.PresentTotal == 0 &&
+                summary.AbsentTotal == 0 &&
+                summary.LeaveTotal == 0 &&
+                summary.LateTotal == 0)
+            {
+                HasNoData = true;
+                return;
+            }
+
+
+            attendanceDate = DateOnly.FromDateTime(summary.MaxAttendanceDate);
+
+            ChartData = new List<StatusCount>
+            {
+                new StatusCount { Status = "Total Employee", Count = summary.EmployeeTotal },
+                new StatusCount { Status = "Present", Count = summary.PresentTotal },
+                new StatusCount { Status = "Absent", Count = summary.AbsentTotal },
+                new StatusCount { Status = "Leave", Count = summary.LeaveTotal },
+                new StatusCount { Status = "Late", Count = summary.LateTotal }
+            };
+
+        }
+
+        catch (Exception)
+
+        {
+
+            HasNoData = true;
+
+        }
+
+    }
+
+
+    private Color GetStatusColor(string status) => StatusColors[status];
+
+    private void OnSelectionChanged(PieChartSelectionChangedEventArgs e)
+
+    {
+
+        string status = e.Point.Argument.ToString();
+
+        if (e.IsPointSelected)
+
+            Selection.Add(status);
+
+        else
+
+            Selection.Remove(status);
+
+        DetailChart?.RefreshData();
+
+    }
+
+
+
+    private void CustomizePiePoint(ChartSeriesPointCustomizationSettings settings)
+
+    {
+
+        settings.PointAppearance.Color = GetStatusColor(settings.Point.Argument.ToString());
+
+    }
+}
+

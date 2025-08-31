@@ -1,0 +1,485 @@
+﻿@page "/shiftlist"
+@using AttendancePayrollWebServerApp.Helper
+@inject ShiftGateway _shiftGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+<div class="row my-2">
+            <div class="d-flex justify-content-between align-items-start">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Shift</h3>
+                    @if (title != "Create")
+                    {
+                        <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                style="outline: none; width:auto;">
+                            Add New Shift
+                        </button>
+                    }
+            </div>
+
+        <div class="col-10">
+           <EditForm Model="@shift" OnValidSubmit="@UpsertShift">
+                    <DataAnnotationsValidator /> 
+
+            <div class="row" style="width: 100%"> 
+                @*  Upper Left Div begin------------------ *@
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+                
+                <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Shift Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="shift.ShiftName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>shift.ShiftName"></ValidationMessage>
+                        </div>
+                    </div>
+
+                    @* <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Shift Name</div>
+                        <div class="col-9">
+                            <div class="d-flex">
+                                <InputText @bind-Value="shift.ShiftName" class="form-control custom-input" style="flex-grow: 1;" />
+                                   
+                                @if (title != "Create")
+                                    {
+                                        <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                                style="outline: none; margin-left: 10px; width:auto;">
+                                            Add
+                                        </button>
+                                    }
+                            </div>
+                            <ValidationMessage For="()=>shift.ShiftName"></ValidationMessage>
+                        </div>
+                    </div> *@
+
+                     <div class="row my-1 align-items-center">
+                            <div class="col-3 custom-input">Shift Type</div>
+                                <div class="col-9">
+                                          <InputSelect @bind-Value="shift.ShiftType" class="form-select custom-input">
+                                          <option value="0" disabled="disabled" selected> --Select Type--</option>
+                                          <option value="A shift">A shift</option>
+                                          <option value="B shift">B shift</option>
+                                          <option value="Night shift">Night shift</option>
+                                         </InputSelect>
+                                          <ValidationMessage For="()=>shift.ShiftType"></ValidationMessage>
+                                 </div>
+                      </div>
+
+                      <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift In</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftInDateTime" @bind:event="oninput" @onchange="CalculateShiftHour"  />
+                                  </div>
+                            </div>
+
+                            <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift Out</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftOutDateTime" @bind:event="oninput" @onchange="CalculateShiftHour"  />
+                                  </div>
+                            </div>
+                             <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift Late</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftLateDateTime" />
+                                  </div>
+                         </div>
+                            
+                     </div>
+
+
+                @* Upper Left Div Ended *@
+
+                    <div class="col-12 col-lg-1"></div>  @* Gap between left and right div *@
+
+                @* Upper Righ Div begin------------------ *@
+                    <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+                             
+                         <div class="row my-1 align-items-center">
+                                    <div class="col-3 custom-input">Shift Hours</div>
+                                        <div class="col-9">
+                                          <input class="form-control custom-input" type="text" @bind="shiftHour" readonly />
+                                    </div>
+                                </div>
+
+                         <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch In</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                             <input class="form-control custom-input" type="time" @bind="lunchInDateTime" @bind:event="oninput" @onchange="CalculateLunchHour" />
+                                  </div>
+                         </div>
+                          <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch Out</div>
+                                            <div class="col-9">
+                                             <!-- Time input field -->
+                                                 <input class="form-control custom-input" type="time" @bind="lunchOutDateTime" @bind:event="oninput" @onchange="CalculateLunchHour" />
+                                 </div>
+                          </div>
+
+
+
+                          <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch Late</div>
+                                          <div class="col-9">
+                                          <!-- Time input field -->
+                                          <input class="form-control custom-input" type="time" @bind="lunchLateDateTime" />
+                                  </div>
+                          </div>
+
+                          <div class="row my-1 align-items-center">
+                                    <div class="col-3 custom-input">Lunch Hours</div>
+                                        <div class="col-9">
+                                          <input class="form-control custom-input" type="text" @bind="lunchHour" readonly />
+                                    </div>
+                                </div>
+
+
+
+                          </div>
+                @* Upper Left Div Ended *@
+
+                    <button class="btn btn-primary custom-input" style="outline: none; margin-left: 116px; width:15%">@title</button>  
+                        </div>
+                  </EditForm> 
+                   
+    </div>
+</div>
+<div>
+
+    @if (shifts != null && shifts.Any())
+    {
+                       <DxGrid @ref="GridExp"
+                        Data="@shifts"
+                        CssClass="mw-1100" 
+                        ShowGroupPanel="true"
+                        ShowFilterRow="true"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        ShowSearchBox="true"
+                        AutoExpandAllGroupRows="true"
+                        GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                        SelectionMode="GridSelectionMode.Multiple"
+                        SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                        FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                        RowClick="OnRowClick"
+                       >
+                     <Columns>
+                            <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                <DxGridDataColumn Caption="Shift Name" FieldName="ShiftName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                <DxGridDataColumn Caption="Shift Type" FieldName="ShiftType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                   
+                                    <DxGridDataColumn Caption="Shift In" FieldName="ShiftIn" DisplayFormat="hh:mm tt" />
+                                    <DxGridDataColumn Caption="Shift Out" FieldName="ShiftOut" DisplayFormat="hh:mm tt" />
+                                    <DxGridDataColumn Caption="Shift Late" FieldName="ShiftLate" DisplayFormat="hh:mm tt" />
+                                    <DxGridDataColumn Caption="Lunch In" FieldName="LunchIn" DisplayFormat="hh:mm tt" />
+                                    <DxGridDataColumn Caption="Lunch Out" FieldName="LunchOut" DisplayFormat="hh:mm tt" />
+                                    <DxGridDataColumn Caption="Lunch Late" FieldName="LunchLate" DisplayFormat="hh:mm tt" />
+                                     <DxGridDataColumn Caption="Lunch Hr" FieldName="LunchHr" DisplayFormat="HH:mm"/>
+                    </Columns>
+                    </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                <div class="text-center">
+                        <img src="/images/Glass spheres.gif">
+                </div>
+        }
+
+        else
+        {
+        //no records
+                   <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Shift> shifts=new List<Shift>();
+    private Shift shift { get; set; } = new Shift();
+    private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempShiftId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid GridExp { get; set; }
+    DateTime datePart = DateTime.Parse("1900-01-01"); 
+
+    //shifIn  
+    private DateTime shiftInDateTime { get; set; } = DateTime.Today;
+    private TimeSpan shiftInToTime => shiftInDateTime.TimeOfDay;
+    //shifOut
+    private DateTime shiftOutDateTime { get; set; } = DateTime.Today;
+    public TimeSpan shiftOutToTime => shiftOutDateTime.TimeOfDay;
+    //shiftLate
+    private DateTime shiftLateDateTime { get; set; } = DateTime.Today;
+    private TimeSpan shiftLateToTime => shiftLateDateTime.TimeOfDay;
+    // lunchIn
+    private DateTime lunchInDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchInToTime => lunchInDateTime.TimeOfDay;
+    //lunchOut
+    private DateTime lunchOutDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchOutToTime => lunchOutDateTime.TimeOfDay;
+    //lunchLate
+    private DateTime lunchLateDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchLateToTime => lunchLateDateTime.TimeOfDay;
+
+    private string shiftHour { get; set; } = "00:00";
+    private string lunchHour { get; set; } = "00:00";
+
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadShift();
+        }
+    }
+
+    private async Task LoadShift()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        shifts = await _shiftGateway.GetShiftsList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadShiftId()
+    {
+        StateHasChanged();
+        shift = await _shiftGateway.GetShifts(tempShiftId);
+        shift.ShiftName = shift.ShiftName;
+        shift.ShiftType = shift.ShiftType;
+        string dateString = "1900-01-01";
+        DateTime datePart = DateTime.Parse(dateString);
+
+        DateTime combinedShiftInDateTime = (DateTime)shift.ShiftIn;
+        TimeSpan shiftIntimeOnly = combinedShiftInDateTime.TimeOfDay;
+        shiftInDateTime = datePart.Date.Add(shiftIntimeOnly);
+
+        DateTime combinedShiftOutDateTime = (DateTime)shift.ShiftOut;
+        TimeSpan shiftOuttimeOnly = combinedShiftOutDateTime.TimeOfDay;
+        shiftOutDateTime = datePart.Date.Add(shiftOuttimeOnly);
+
+        DateTime combinedShiftLateDateTime = (DateTime)shift.ShiftLate;
+        TimeSpan shiftLatetimeOnly = combinedShiftLateDateTime.TimeOfDay;
+        shiftLateDateTime = datePart.Date.Add(shiftLatetimeOnly);
+
+        DateTime combinedLunchInDateTime = (DateTime)shift.LunchIn;
+        TimeSpan lunchIntimeOnly = combinedLunchInDateTime.TimeOfDay;
+        lunchInDateTime = datePart.Date.Add(lunchIntimeOnly);
+
+        DateTime combinedLunchOutDateTime = (DateTime)shift.LunchOut;
+        TimeSpan lunchOuttimeOnly = combinedLunchOutDateTime.TimeOfDay;
+        lunchOutDateTime = datePart.Date.Add(lunchOuttimeOnly);
+
+        DateTime combinedLunchLateDateTime = (DateTime)shift.LunchLate;
+        TimeSpan lunchLatetimeOnly = combinedLunchLateDateTime.TimeOfDay;
+        lunchLateDateTime = datePart.Date.Add(lunchLatetimeOnly);
+
+
+        DateTime combinedShiftHrDateTime = (DateTime)shift.ShiftHr;
+        TimeSpan shiftHrtimeOnly = combinedShiftHrDateTime.TimeOfDay;
+        shiftHour = shiftHrtimeOnly.ToString(@"hh\:mm");
+
+
+        DateTime combinedLunchHrDateTime = (DateTime)shift.LunchHr;
+        TimeSpan lunchHrtimeOnly = combinedLunchHrDateTime.TimeOfDay;
+        lunchHour = lunchHrtimeOnly.ToString(@"hh\:mm");
+
+
+
+        StateHasChanged();
+    }
+
+    private async Task UpsertShift()
+    {
+        DateTime combinedShiftInDateTime = datePart.Date.Add(shiftInToTime);
+        DateTime combinedShiftOutDateTime = datePart.Date.Add(shiftOutToTime);
+        DateTime combinedShiftLateDateTime = datePart.Date.Add(shiftLateToTime);
+        DateTime combinedlunchInDateTime = datePart.Date.Add(lunchInToTime);
+        DateTime combinedlunchOutDateTime = datePart.Date.Add(lunchOutToTime);
+        DateTime combinedlunchLateDateTime = datePart.Date.Add(lunchLateToTime);
+
+        TimeSpan shiftHrTimeSpan = TimeSpan.Parse(shiftHour);
+        DateTime combinedShiftHrDateTime = datePart.Date.Add(shiftHrTimeSpan);
+
+        TimeSpan lunchHrTimeSpan = TimeSpan.Parse(lunchHour);
+        DateTime combinedLunchHrDateTime = datePart.Date.Add(lunchHrTimeSpan);
+
+        bool isExist = await _shiftGateway.IsExist(shift.ShiftName, shift.ShiftType, shift.ShiftId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Shift name already exists");
+            return;
+        }
+
+        if (title == "Create")
+        {
+            shift = new Shift
+                {
+                    ShiftName = shift.ShiftName,
+                    ShiftType = shift.ShiftType,
+                    ShiftIn = combinedShiftInDateTime,
+                    ShiftOut = combinedShiftOutDateTime,
+                    ShiftLate = combinedShiftLateDateTime,
+                    ShiftHr = combinedShiftHrDateTime,
+                    LunchIn = combinedlunchInDateTime,
+                    LunchOut = combinedlunchOutDateTime,
+                    LunchLate = combinedlunchLateDateTime,
+                    LunchHr = combinedLunchHrDateTime
+
+                };
+            await _shiftGateway.Save(shift);
+            shifts.Add(shift);
+            await _jsRuntime.ToastrSuccess("Shift Created Successfully");
+            await LoadShift();
+          //  await LoadShiftId();
+            ResetShiftData();
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the shift if confirmed
+                shift = new Shift
+                    {
+                        ShiftId = tempShiftId,
+                        ShiftName = shift.ShiftName,
+                        ShiftType = shift.ShiftType,
+                        ShiftIn = combinedShiftInDateTime,
+                        ShiftOut = combinedShiftOutDateTime,
+                        ShiftLate = combinedShiftLateDateTime,
+                        ShiftHr = combinedShiftHrDateTime,
+                        LunchIn = combinedlunchInDateTime,
+                        LunchOut = combinedlunchOutDateTime,
+                        LunchLate = combinedlunchLateDateTime,
+                        LunchHr = combinedLunchHrDateTime
+                    };
+                await _shiftGateway.Edit(shift);
+                shifts.Add(shift);
+                await LoadShift();
+                await _jsRuntime.ToastrSuccess("Shift Updated Successfully");
+            }
+            else
+            {
+                await LoadShift();
+            }
+        }
+    }
+
+    private void ResetShiftData()
+    {
+        shift = new Shift();
+
+        shiftInDateTime = DateTime.Today;
+        shiftOutDateTime = DateTime.Today;
+        shiftLateDateTime = DateTime.Today;
+        lunchInDateTime = DateTime.Today;
+        lunchOutDateTime = DateTime.Today;
+        lunchLateDateTime = DateTime.Today;
+        shiftHour = "00:00";
+        lunchHour = "00:00";
+
+    }
+
+    private async Task AddNew()
+    { 
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetShiftData();
+        await LoadShift();
+    }
+
+    private void CalculateShiftHour()
+    {
+        if (shiftInDateTime != default && shiftOutDateTime != default)
+        {
+            var shiftInTime = shiftInDateTime.TimeOfDay;
+            var shiftOutTime = shiftOutDateTime.TimeOfDay;
+            TimeSpan shiftduration;
+            if (shiftOutTime > shiftInTime)
+            {
+                shiftduration = shiftOutTime - shiftInTime;
+            }
+            else
+            {
+                // If shift ends on the next day
+                shiftduration = (TimeSpan.FromHours(24) - shiftInTime) + shiftOutTime;
+            }
+            shiftHour = shiftduration.ToString(@"hh\:mm");
+        }
+    }
+
+    private void CalculateLunchHour()
+    {
+        if (lunchInDateTime != default && lunchOutDateTime != default)
+        {
+            var lunchInTime = lunchInDateTime.TimeOfDay;
+            var lunchOutTime = lunchOutDateTime.TimeOfDay;
+            TimeSpan duration;
+            if (lunchOutTime > lunchInTime)
+            {
+                duration = lunchOutTime - lunchInTime;
+            }
+            else
+            {
+                duration = (TimeSpan.FromHours(24) - lunchInTime) + lunchOutTime;
+            }
+            lunchHour = duration.ToString(@"hh\:mm");
+        }
+    }
+
+
+    // private void OnAccordionItemClick(AccordionItemClickEventArgs e)
+    // {
+    //     // Enable FocusedRowEnabled when accordion item is clicked
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+       {
+    //     if (count == 0)
+    //     {
+    //         count = 1;
+    //         return;
+    //     }
+
+        var item = e.DataItem as Shift;
+        if (item != null)
+        {
+            tempShiftId = item.ShiftId;
+        }
+
+        title = "Update";
+        await LoadShiftId();
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

@@ -1,0 +1,374 @@
+﻿@page "/salarybreakdownsetupage"
+@using AttendancePayrollWebServerApp.Helper
+@inject SalaryBreakdownSetupGateway _salarySetupGateway
+@inject CategoryItemGateway _categoryItemGateway
+
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+
+
+
+<div class="row my-0">
+          <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Salary Setup</h3>
+        @if (title != "Create")
+        {
+                                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                        style="outline: none; width:auto;">
+                                   Add New SalaryBreakdownSetup
+                                </button>
+        }
+
+          </div>
+
+              <div class="col-10"  >
+              <EditForm Model="@salarySetup" OnValidSubmit="@UpsertSalarySetup">
+                    <DataAnnotationsValidator /> 
+                   <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">Employee Type</div>
+                        <div class="col-9">
+                            <InputSelect @bind-Value="salarySetup.EmpTypeCatItemId" class="form-select custom-input2 light-violet" >
+                                <option value="0" disabled="disabled" selected>-- Select --</option>
+                                @foreach (var items in employeeTypeCategoryItems)
+                                {
+                                    <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                }
+                            </InputSelect>
+                             <ValidationMessage For="()=>salarySetup.EmpTypeCatItemId"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">Breakdown Type</div>
+                        <div class="col-9">
+                            <InputSelect @bind-Value="salarySetup.BreakDwonType" class="form-select custom-input2 light-violet">
+                                <option value="0" disabled="disabled" selected> -- Select --</option>
+                                <option value="Fixed">Fixed</option>
+                                <option value="Percentage">Percentage</option>
+                            </InputSelect>
+                            <ValidationMessage For="()=>salarySetup.BreakDwonType"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">Based On</div>
+                        <div class="col-9">
+
+                            @if (salarySetup.BreakDwonType == "Fixed")
+                            {
+                                salarySetup.BreakDownBasedON = "N/A";
+                                <InputText @bind-Value="salarySetup.BreakDownBasedON" class="form-control custom-input2" style="background-color: gray;color: white" disabled></InputText>
+                            }
+
+
+                            else
+                            {
+                                <InputSelect @bind-Value="salarySetup.BreakDownBasedON" class="form-select custom-input2 light-violet">
+                                    <option value="N/A" disabled="disabled" selected> -- Select --</option>
+                                    <option value="GS">Gross</option>
+                                    <option value="BS">Basic</option>
+                                </InputSelect>
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">TA</div>
+                        <div class="col-9">
+                            <InputNumber @bind-Value="salarySetup.TA" class="form-control custom-input2"></InputNumber>
+                            <ValidationMessage For="()=>salarySetup.TA"></ValidationMessage>
+                        </div>
+                    </div>
+
+                   
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">MA</div>
+                        <div class="col-9">
+                            <InputNumber @bind-Value="salarySetup.MA" class="form-control custom-input2"></InputNumber>
+                            <ValidationMessage For="()=>salarySetup.MA"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                     <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">FA</div>
+                        <div class="col-9">
+                            <InputNumber @bind-Value="salarySetup.FA" class="form-control custom-input2"></InputNumber>
+                            <ValidationMessage For="()=>salarySetup.FA"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">HR</div>
+                        <div class="col-9">
+
+                            @if (salarySetup.BreakDwonType == "Fixed" )
+                            {
+                                salarySetup.HR = 0;
+                                <InputNumber @bind-Value="salarySetup.HR" class="form-control custom-input2" style="background-color: gray;color: white" disabled></InputNumber>
+                            }
+                            else
+                            {
+                                <InputNumber @bind-Value="salarySetup.HR" class="form-control custom-input2"></InputNumber>
+                                <ValidationMessage For="()=>salarySetup.HR"></ValidationMessage>
+                            }
+                           
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">BS</div>
+                        <div class="col-9">
+                            @if (salarySetup.BreakDwonType == "Fixed" || salarySetup.BreakDownBasedON == "BS")
+                            {
+                                salarySetup.BS = 0;
+                                <InputNumber @bind-Value="salarySetup.BS" class="form-control custom-input2" style="background-color: gray;color: white" disabled></InputNumber>
+                            }
+                            else
+                            {
+                                <InputNumber @bind-Value="salarySetup.BS" class="form-control custom-input2"></InputNumber>
+                                <ValidationMessage For="()=>salarySetup.BS"></ValidationMessage>
+                            }
+                        </div>
+                    </div>
+
+
+                  @*   <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>   *@
+
+                </div>
+                </div>
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+<div class="row my-1"> 
+
+
+
+@*     @if (salarySetupList != null && salarySetupList.Any())
+    {
+                                <DxGrid @ref="GridExp"
+                                Data="@salarySetupList"              
+                                ShowGroupPanel="true"
+                                ShowFilterRow="true"
+                                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                PageSize="8" 
+                                PagerPosition="GridPagerPosition.Bottom"
+                                TextWrapEnabled="false"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowSearchBox="true"
+                                AutoExpandAllGroupRows="true"
+                                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                RowClick="OnRowClick"
+                               >
+                             <Columns >
+                                    <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                        <DxGridDataColumn Caption="SalaryBreakdownSetup Name" FieldName="CategoryName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                            </Columns>
+                                    <TotalSummary>
+                                        <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="CategoryName" />
+                                    </TotalSummary>
+                            </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+                                <div class="text-center">
+                                <img src="/images/Animation3.gif">
+                                </div>
+        }
+        else
+        {
+                                   <p>No Records Found.</p>
+        }
+    }
+ *@
+
+</div>
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<SalaryBreakdownSetup> salarySetupList = new List<SalaryBreakdownSetup>();
+    private List<CategoryItem> employeeTypeCategoryItems { get; set; } = new List<CategoryItem>();
+    private string baseUrl;
+
+    private SalaryBreakdownSetup salarySetup { get; set; } = new SalaryBreakdownSetup();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    int employeeTypeCatId = 3;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadSalarySetup();
+        }
+    }
+
+
+    private async Task LoadSalarySetup()
+    {
+        IsLoading = true;
+        StateHasChanged();
+     // salarySetupList = await _salarySetupGateway.GetCategoryList();
+        salarySetupList = await _salarySetupGateway.GetSalaryBreakdownSetupList();
+        var categoryItems = await _categoryItemGateway.GetCategoryItemList();
+        employeeTypeCategoryItems = categoryItems.Where(data => data.CategoryId == employeeTypeCatId).ToList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadSalarySetupById()
+    {
+        // StateHasChanged();
+        // salarySetup = await _salarySetupGateway.GetCategory(tempId);
+        // salarySetup.CategoryName = salarySetup.CategoryName;
+        // StateHasChanged();
+    }
+
+    private async Task UpsertSalarySetup()
+    {
+        // bool isExist = await _salarySetupGateway.IsExist(salarySetup.CategoryName, salarySetup.CategoryId);
+        // if (isExist)
+        // {
+        //     await _jsRuntime.ToastrError("SalaryBreakdownSetup name already exists");
+        //     return;
+        // }
+
+        if (title == "Create")
+        {
+            salarySetup = new SalaryBreakdownSetup
+                {
+                    EmpTypeCatItemId = salarySetup.EmpTypeCatItemId,
+                    BreakDwonType=salarySetup.BreakDwonType,
+                    BreakDownBasedON=salarySetup.BreakDownBasedON,
+                    TA=salarySetup.TA,
+                    FA = salarySetup.FA,
+                    MA=salarySetup.MA,
+                    HR = salarySetup.HR,
+                    BS=salarySetup.BS
+                };
+            await _salarySetupGateway.Save(salarySetup);
+            salarySetupList.Add(salarySetup);
+            await _jsRuntime.ToastrSuccess("Created Successfully");
+            await LoadSalarySetup();
+            await LoadSalarySetupById();
+            ResetData();
+        }
+
+
+
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the salarySetup if confirmed
+                salarySetup = new SalaryBreakdownSetup
+                    {
+                        // CategoryId = tempId,
+                        // CategoryName = salarySetup.CategoryName
+                    };
+                await _salarySetupGateway.Edit(salarySetup);
+                salarySetupList.Add(salarySetup);
+                await LoadSalarySetup();
+                await _jsRuntime.ToastrSuccess("Updated Successfully");
+            }
+            else
+            {
+                await LoadSalarySetup();
+            }
+        }
+    }
+
+
+    private void ResetData()
+    {
+        salarySetup = new SalaryBreakdownSetup();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadSalarySetup();
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+        {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+        }
+
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        var item = e.DataItem as SalaryBreakdownSetup;
+        if (item != null)
+        {
+            tempId = item.Id;
+        }
+        title = "Update";
+        await LoadSalarySetupById();
+    }
+
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}
+
+
+
+
+
+

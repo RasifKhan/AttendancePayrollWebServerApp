@@ -1,0 +1,117 @@
+﻿@page "/salarysheetreport"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Models.View
+@inject IJSRuntime js
+@inject NavigationManager _navigation
+@inject SalaryViewGateway _salaryViewGateway
+
+<h1>Monthly Salary Report</h1>
+<br>
+
+
+@* <div class="row my-1 align-items-center">
+    <div class="col-1 custom-input">SalStr</div>
+    <div class="col-3">
+        <select class="form-select custom-input light-violet" id="categorySelect" name="category">
+            <option value="0" disabled selected>--Select--</option>
+            @foreach (var item in salStrList)
+            {
+                <option value="@item.SalStr">@item.SalStr</option>
+            }
+        </select>
+    </div>
+</div> *@
+
+
+<div class="row my-1 align-items-center">
+    <div class="col-1 custom-input">SalStr</div>
+    <div class="col-3">
+        <select class="form-select custom-input light-violet"
+                id="categorySelect"
+                name="category"
+                @bind="salstr">
+            <option value="" disabled selected>--Select--</option>
+            @foreach (var item in salStrList)
+            {
+                <option value="@item.SalStr">@item.SalStr</option>
+            }
+        </select>
+    </div>
+</div>
+
+
+
+
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportPDF">PDF1</button>
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportXLS">xls1</button>
+<br />
+
+
+
+@code {
+    private string? empId;
+    private string salstr { get; set; } =string.Empty;
+    private bool IsLoading { get; set; }
+   
+    private List<SalaryView> salStrList = new List<SalaryView>();
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+        }
+    }
+
+    private async Task Load()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        salStrList = await _salaryViewGateway.GetDistinctSalStrList(salstr);
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async void OpenReportPDF()
+    {
+        string baseUri = _navigation.BaseUri;
+        string url = $"{baseUri}api/Reportss/GetSalaryReport?reportType=1";
+        if (!string.IsNullOrEmpty(salstr))
+        {
+            url += $"&salstr={salstr}";
+        }
+        await js.InvokeVoidAsync("open", url, "_blank");
+    }
+
+
+
+
+
+    private async void OpenReportXLS()
+    {
+        string baseUri = _navigation.BaseUri;
+        string url = $"{baseUri}api/Reportss/GetSalaryReport?reportType=2";
+
+        if (!string.IsNullOrEmpty(salstr))
+        {
+            url += $"&salstr={salstr}";
+        }
+        await js.InvokeVoidAsync("open", url, "_blank");
+    }
+
+
+
+    // private async void OpenReportXLS()
+    // {
+    //     string baseUri = _navigation.BaseUri;
+    //     string url = $"{baseUri}api/Reportss/GetEmpReport?reportType=2";
+
+    //     if (!string.IsNullOrEmpty(empId))
+    //     {
+    //         url += $"&empId={empId}";
+    //     }
+    //     await js.InvokeVoidAsync("open", url, "_blank");
+    // }
+
+}

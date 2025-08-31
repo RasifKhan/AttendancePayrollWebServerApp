@@ -1,0 +1,142 @@
+﻿@using AttendancePayrollWebServerApp.Pages.Account
+@using Microsoft.AspNetCore.Authorization
+@using AttendancePayrollWebServerApp.Pages.AccountRedirectTo
+
+<SessionChecker />
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized>
+                @{
+                    if (routeData.PageType == typeof(AttendancePayrollWebServerApp.Pages.Account.LoginModel))
+                    {
+                        <RouteView RouteData="@routeData" />
+                    }
+                    else
+                    {
+                        <div>
+                            <h3>Access Denied</h3>
+                            <p>You do not have permission to access this page: @routeData.PageType.FullName</p>
+                            <p><a href="/Account/Login">Return to Login</a></p>
+                        </div>
+                    }
+                }
+            </NotAuthorized>
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <h3>Page Not Found</h3>
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+
+
+@* @using AttendancePayrollWebServerApp.Pages.Account
+@using Microsoft.AspNetCore.Authorization
+@using AttendancePayrollWebServerApp.Pages.AccountRedirectTo
+
+<SessionChecker /> 
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized>
+                @{
+                    if (routeData.PageType == typeof(AttendancePayrollWebServerApp.Pages.Account.LoginModel))
+                    {
+                        <RouteView RouteData="@routeData" />
+                    }
+                    else
+                    {
+                        <RedirectToLogin />
+                    }
+                }
+            </NotAuthorized>
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+ *@
+
+
+
+
+
+
+
+@* @using AttendancePayrollWebServerApp.Pages.AccountRedirectTo
+@using Microsoft.AspNetCore.Http
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized>
+                @{
+                    if (routeData.PageType == typeof(AttendancePayrollWebServerApp.Pages.Account.LoginModel))
+                    {
+                        <RouteView RouteData="@routeData" />
+                    }
+                    else
+                    {
+                        <RedirectToLogin />
+                    }
+                }
+            </NotAuthorized>
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    protected override void OnInitialized()
+    {
+        bool isAuthenticated = HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+        if (!Navigation.Uri.EndsWith("/Account/Login") && !isAuthenticated)
+        {
+            Navigation.NavigateTo($"/Account/Login?ReturnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+        }
+    }
+}
+
+ *@
+
+
+
+
+
+@* @using AttendancePayrollWebServerApp.Pages.AccountRedirectTo
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="typeof(MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <p>Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+
+ *@

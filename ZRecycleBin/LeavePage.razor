@@ -1,0 +1,805 @@
+﻿@page "/leavepage"
+@using AttendancePayrollWebServerApp.Helper
+@inject LeaveGateway _leaveGateway
+@inject EmployeeGateway _employeeGateway
+@using System.Linq;
+
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+
+
+
+
+<div class="row my-0" style="height:5% ; width: 100 ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Leave </h3>
+       
+
+        @if (title != "Entry")
+        {
+                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                        style="outline: none; width:auto;">
+                        Add New Leave
+                </button>
+        }
+    </div>
+</div>
+
+
+
+
+
+<div class="row my-0"  >
+           <div class="col-10" >
+           
+           <EditForm Model="@leave" OnValidSubmit="@UpsertLeave">
+                    <DataAnnotationsValidator /> 
+
+            <div class="row" style="width: 100% "> 
+                
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+                                  
+                                       @*   <div class="row my-1 align-items-center">
+                                                   <div class="col-3 custom-input2 ">Employee Id</div>
+                                                <div class="col-9">
+                                                    
+                                                            <InputSelect @bind-Value="leave.EmployeeId" class="form-select custom-input2 light-violet" @onchange="OnEmployeeSelected">
+                                                        <option value="0" disabled="disabled" selected>-- Employee Id --</option>
+                                                            @foreach (var items in employees)
+                                                            {
+                                                                                         <option value="@items.EmployeeId">@items.EmployeeId</option>
+                                                            }
+                                                    </InputSelect>
+                                                 
+                                                </div>
+                                            </div> *@
+
+                                               <div class="row my-1 align-items-center">
+                                                    <div class="col-3 custom-input2">Employee Id</div>
+                                                    <div class="col-9">
+                                                        <select @bind="leave.EmployeeId" @bind:event="oninput" @onchange="OnEmployeeSelected" class="form-select custom-input2 light-violet">
+                                                            <option value="0">-- Employee Id --</option>
+                                                                                @foreach (var item in employees)
+                                                                                {
+                                                                    <option value="@item.EmployeeId">@item.EmployeeId</option>
+                                                                                }
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+
+                                                <div class="row my-1 align-items-center">
+                                                    <div class="col-3 custom-input2">Name</div>
+                                                    <div class="col-9">
+                                                        <input type="text" @bind="employeeName" class="form-control custom-input2" readonly />
+                                                    </div>
+                                                </div>
+                                              
+
+
+
+
+
+
+
+                                           
+
+                                             <div class="row my-1 align-items-center">
+                                                <div class="col-3 custom-input2">Apply Date</div>
+                                                <div class="col-9">
+                                                    <InputDate @bind-Value="leave.LeaveApplyDate" class="form-control custom-input2" ></InputDate>
+                                                </div>
+                                            </div>
+
+
+
+                                               
+
+
+
+                                             <div class="row my-1 align-items-center">
+                                                <div class="col-3 custom-input2">From Date</div>
+                                                <div class="col-9">
+                                                    <InputDate  @bind-Value="_applyFromDate" class="form-control custom-input2"></InputDate>
+                                                </div>
+                                            </div>
+
+
+                                               <div class="row my-1 align-items-center">
+                                                        <div class="col-3 custom-input2">Days</div>
+                                                        <div class="col-9">
+                                                            <InputNumber  @bind-Value="_applyDays" class="form-control custom-input2"></InputNumber>
+                                                        </div>
+                                                    </div>     
+
+
+                                                     <div class="row my-1 align-items-center">
+                                                    <div class="col-3 custom-input2">To Date</div>
+                                                    <div class="col-9">
+                                                        <input type="text" value="@FormattedToDate" class="form-control custom-input2" disabled />
+                                                    </div>
+                                              </div>
+
+
+
+                  
+                                        <div class="row my-1 align-items-center">
+                                            <div class="col-3 custom-input2 ">Leave Type</div>
+                                                <div class="col-9">
+                                                            <InputSelect @bind-Value="leave.LeaveType" class="form-select custom-input2 light-violet">
+                                                            <option value="0" disabled="disabled" selected> --Select Type--</option>
+                                                            <option value="CL">CL</option>
+                                                            <option value="SL">SL</option>
+                                                             <option value="EL">EL</option>
+                                                            <option value="ML">ML</option>
+                                                            </InputSelect>
+                                                            <ValidationMessage For="()=>leave.LeaveType"></ValidationMessage>
+                                                    </div>
+                                        </div>
+
+
+
+
+                                            
+
+
+                                                  
+
+                                          
+
+
+
+                                         <div class="row my-1 align-items-center">
+                                               <div class="col-3 custom-input2">Reason</div>
+                                                   <div class="col-9">
+                                                    <InputText @bind-Value="leave.Reason"  class="form-control custom-input2" ></InputText>
+                                                    @* <ValidationMessage For="()=>employee.EmployeeName"></ValidationMessage> *@
+                                            </div>
+                                        </div> 
+
+
+                    </div>
+
+
+
+                    <div class="col-12 col-lg-1"></div>  
+                    <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+
+
+
+                                           
+                    @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height: 12%; width: 100%; border: 1px solid white; background-color: gray;color: white;  margin-left:2px;">
+                                                                                                            <div style="height: 101%; width: 20%;  border: 1px solid white;">
+                                                                                                                 
+                                                                                                            </div>
+
+                                                                                                            <div style=" height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>CL</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>SL</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>EL</div>
+                                                                                                                </div>   
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>ML</div>
+                                                                                                                </div> 
+                                                          </div>
+                    @*  //*******************************************// *@
+
+
+                    @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height: 12%; width: 100%; border: 1px solid white;  background-color: gray;color: white; margin-left:2px;">
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>Total</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@clTotal</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@slTotal</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@elTotal</div>
+                                                                                                                </div> 
+                                                                                                                
+                                                                                                                <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@mlTotal</div>
+                                                                                                                </div>
+                                                          </div>
+                    @*  //*******************************************// *@
+                    @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height: 12%; width: 100%; border: 1px solid white; background-color: gray;color: white;  margin-left:2px;">
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>Enjoyed</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@subtructedCl</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@subtructedSl</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@subtructedEl</div>
+                                                                                                                </div>     
+                                                                                                                 <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@subtructedMl</div>
+                                                                                                                </div>   
+                                                          </div>
+                    @*  //*******************************************// *@
+
+
+
+                    @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height: 12%; width: 100%; border: 1px solid white;background-color: gray;color: white;  margin-left:2px;">
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>Balance</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@gridShowClBal</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@gridShowSlBal</div>
+                                                                                                                </div>
+
+                                                                                                            <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@gridShowElBal</div>
+                                                                                                                </div>     
+                                                                                                                 <div style="height: 101%; width: 20%; border: 1px solid white; display: flex; justify-content: center; align-items: center;">
+                                                                                                                    <div>@gridShowMlBal</div>
+                                                                                                                </div>   
+                                                          </div>
+                    @*  //*******************************************// *@
+                                            
+                                           <div class="row my-1 align-items-center">
+                                                <div class="col-3 custom-input2">Approved Date</div>
+                                                <div class="col-9">
+                                                    <InputDate @bind-Value="leave.LeaveIssuedDate" class="form-control custom-input2" ></InputDate>
+                                                </div>
+                                            </div>
+                                               
+
+                                            
+                                            <div class="row my-1 align-items-center">
+                                                <div class="col-3 custom-input2">Issued From</div>
+                                                <div class="col-9">
+                                                    <InputDate  @bind-Value="_issuedFromDate" class="form-control custom-input2"></InputDate>
+                                                </div>
+                                            </div>
+                                           
+                                            
+                                            <div class="row my-1 align-items-center">
+                                                        <div class="col-3 custom-input2">Issued Days</div>
+                                                        <div class="col-9">
+                                                            <InputNumber  @bind-Value="_issuedDays" class="form-control custom-input2"></InputNumber>
+                                                        </div>
+                                           </div>  
+                                         
+                                            
+                                            <div class="row my-1 align-items-center">
+                                                    <div class="col-3 custom-input2">Issued To</div>
+                                                    <div class="col-9">
+                                                        <input type="text" value="@FormattedIssuedToDate" class="form-control custom-input2" disabled />
+                                                    </div>
+                                            </div>
+                                            
+                                             <div class="row my-1 align-items-center">
+                                               <div class="col-3 custom-input2">Remarks</div>
+                                                   <div class="col-9">
+                                                    <InputText @bind-Value="leave.IssuedRemarks"  class="form-control custom-input2" ></InputText>
+                                            </div>
+                                        </div>
+
+                   </div>
+                
+                  <button class="btn btn-primary custom-input2" style="outline: none;  margin-left: 119px;  width:150px" >@title</button>  
+                </div>
+                  </EditForm> 
+    </div>
+</div>
+
+
+
+
+
+
+
+<div class="row my-1">
+    @if (leavesByEmpId != null && leavesByEmpId.Any())
+    {
+                       <DxGrid @ref="GridExp"
+                       
+                        Data="@leavesByEmpId"
+                        
+                        ShowGroupPanel="true"
+                        ShowFilterRow="true"
+                        ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                        PageSizeSelectorVisible="true"
+                        PageSizeSelectorAllRowsItemVisible="true"
+                        PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                        PageSize="5" 
+                        PagerPosition="GridPagerPosition.Bottom"
+                        TextWrapEnabled="false"
+                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                        ShowSearchBox="true"
+                        AutoExpandAllGroupRows="true"
+                        GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                        SelectionMode="GridSelectionMode.Multiple"
+                        SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                        FocusedRowEnabled="false" FocusedRowChanged="OnFocusedRowChanged"
+                        RowClick="OnRowClick"
+                       >
+
+                     <Columns>
+                            <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                    <DxGridDataColumn Caption="LeaveId" FieldName="LeaveId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/> 
+                                    <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/> 
+                                    <DxGridDataColumn Caption="Leave Type" FieldName="LeaveType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>      
+                                    <DxGridDataColumn Caption="Issued Days" FieldName="IssuedDays" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>      
+                                               
+                    </Columns>
+
+                            <TotalSummary>
+                                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="leaveId" />
+                            </TotalSummary>
+
+                    </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                <div class="text-center">
+                        <img src="/images/Glass spheres.gif">
+                </div>
+        }
+
+        else
+        {
+        //no records
+                   <p>No Records Found. Entry leave against employee Id.</p>
+        }
+    }
+</div>
+ 
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Leave> leaves=new List<Leave>();
+    private IEnumerable<Leave> leavesByEmpId { get; set; } = new List<Leave>();
+    private List<Employee> employees = new List<Employee>();
+    private Employee employee = new Employee();
+    private decimal clTotal = 0;
+    private decimal slTotal = 0;
+    private decimal elTotal = 0;
+    private decimal mlTotal = 0;
+
+    private decimal clResult { get; set; } = 0;
+    private decimal slResult { get; set; } = 0;
+    private decimal elResult { get; set; } = 0;
+    private decimal mlResult { get; set; } = 0;
+
+    private Leave leave { get; set; } = new Leave();
+    private Leave leav2 { get; set; } = new Leave();
+    private Leave leav3 { get; set; } = new Leave();
+    private int count { get; set; } = 0;
+    private string title { get; set; } = "Entry";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid GridExp { get; set; }
+    private string FormattedToDate => leave.ApplyToDate?.ToString("dd-MMM-yyyy") ?? "dd-MMM-yyyy";
+    private string FormattedIssuedToDate => leave.IssuedToDate?.ToString("dd-MMM-yyyy") ?? "dd-MMM-yyyy";
+
+    private DateTime? _applyFromDate
+    {
+        get => leave.ApplyFromDate;
+        set
+        {
+            leave.ApplyFromDate = value;
+            UpdateToDate();
+        }
+    }
+
+    private int _applyDays
+    {
+        get => leave.ApplyDays;
+        set
+        {
+            leave.ApplyDays = value;
+            UpdateToDate();
+        }
+    }
+
+    private DateTime? _issuedFromDate
+    {
+        get => leave.IssuedFromDate;
+        set
+        {
+            leave.IssuedFromDate = value;
+            UpdateIssuedToDate();
+        }
+    }
+
+    private int _issuedDays
+    {
+        get => leave.IssuedDays;
+        set
+        {
+            leave.IssuedDays = value;
+            UpdateIssuedToDate();
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            leave.LeaveApplyDate  = DateTime.Today;
+            leave.ApplyFromDate   = DateTime.Today;
+            leave.LeaveIssuedDate = DateTime.Today;
+            leave.IssuedFromDate  = DateTime.Today;
+            await LoadLeave();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadLeave()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        // leavesByEmpId = (await _leaveGateway.GetAllLeaveByEmpId(leave.EmployeeId));
+        // leavesByEmpId = (await _leaveGateway.GetAllLeaveByEmpId(leave.EmployeeId)).Cast<Leave>(.ToList();
+        employees = await _employeeGateway.GetEmployeeList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+
+    decimal gridShowClBal=0, gridShowSlBal = 0, gridShowMlBal = 0, gridShowElBal = 0;
+    decimal subtructedCl = 0, subtructedSl = 0, subtructedMl = 0, subtructedEl = 0;
+
+
+    private async Task LoadLeaveByEmpId()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        var result1 = await _leaveGateway.GetLeaveList();
+        leavesByEmpId = result1.Where(data => data.EmployeeId == leave.EmployeeId).ToList();
+        // var result = await _leaveGateway.GetAllLeaveByEmpId(leave.EmployeeId);
+        // leavesByEmpId = Enumerable.ToList(result as IEnumerable<Leave> ?? new[] { result as Leave }.Where(x => x != null));
+        // if (result is IEnumerable<Leave> leaveCollection)
+        // {
+        //     leavesByEmpId = leaveCollection.ToList();
+        // }
+        clTotal = 10;
+        slTotal = 14;
+        elTotal = 11;
+        mlTotal = 120;
+        leav3 = await _leaveGateway.GetMaxLeaveByEmpId(leave.EmployeeId);
+        if (leav3.CLBalance != 0 && leav3.SLBalance != 0 && leav3.ELBalance !=0 && leav3.MLBalance!=0)
+        {
+            gridShowClBal = Convert.ToDecimal(leav3.CLBalance);
+            gridShowSlBal = Convert.ToDecimal(leav3.SLBalance);
+            gridShowElBal = Convert.ToDecimal(leav3.ELBalance);
+            gridShowMlBal = Convert.ToDecimal(leav3.MLBalance);
+        }
+        else
+        {
+            gridShowClBal = clTotal;
+            gridShowSlBal = slTotal;
+            gridShowElBal = elTotal;
+            gridShowMlBal = mlTotal;
+        }
+        subtructedCl = clTotal - gridShowClBal;
+        subtructedSl = slTotal - gridShowSlBal;
+        subtructedEl = elTotal - gridShowElBal;
+        subtructedMl = mlTotal - gridShowMlBal;
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task OnEmployeeSelected(ChangeEventArgs e)
+    {
+            leave.EmployeeId =e.Value.ToString();
+            await LoadLeaveByEmpId();
+            await  LoadEmployeeDetails();
+    }
+
+    private string employeeName = "";
+    private async Task LoadEmployeeDetails()
+    {
+        // Fetch the leave details including the VirtualEmployee
+        // leave = await LeaveService.GetLeaveByEmployeeIdAsync(leave.EmployeeId);
+        var result = await _employeeGateway.GetEmployee(leave.EmployeeId);
+        //  leave = result;
+        employee = result;
+        employeeName = employee.EmployeeName;
+        // if (leave.VirtualEmployee != null)
+        //{
+          //  employeeName = leave.VirtualEmployee.EmployeeName;
+        //}
+       // else
+       // {
+        //    employeeName = "Employee not found";
+       // }
+    }
+
+
+
+
+
+
+
+   
+    private async Task LoadLeaveId()
+    {
+        StateHasChanged();
+        leave = await _leaveGateway.GetLeave(tempId);
+       
+        //leave.LeaveId = leave.LeaveId;
+        //leave.LeaveType = leave.LeaveType;
+        StateHasChanged();
+    }
+
+
+    private void UpdateToDate()
+    {
+        if (leave.ApplyFromDate.HasValue && leave.ApplyDays > 0)
+        {
+            // Simply add the number of days to the From Date
+            leave.ApplyToDate = leave.ApplyFromDate.Value.AddDays(leave.ApplyDays-1);
+        }
+        else
+        {
+            leave.ApplyToDate = null;
+        }
+        StateHasChanged();
+    }
+
+
+
+    private void UpdateIssuedToDate()
+    {
+        if (leave.IssuedFromDate.HasValue && leave.IssuedDays > 0)
+        {
+            // Simply add the number of days to the From Date
+            leave.IssuedToDate = leave.IssuedFromDate.Value.AddDays(leave.IssuedDays - 1);
+        }
+
+        else
+        {
+            leave.IssuedToDate = null;
+        }
+        StateHasChanged();
+    }
+
+
+
+    //int clBal;
+
+    private async Task UpsertLeave()
+    {
+
+
+        if (title == "Entry")
+        {
+            // int clBal = await _leaveGateway.SumIssuedDaysCL(leave.EmployeeId) + leave.IssuedDays;
+            // decimal clResult= clTotal-clBal;
+            int countEmpBYid = await _leaveGateway.CountEmpId(leave.EmployeeId);
+            if (countEmpBYid == 0)
+            {
+                clResult = clTotal;
+                slResult = slTotal;
+                elResult = elTotal;
+                mlResult = mlTotal;
+                if (leave.LeaveType == "CL")
+                {
+                    int x;
+                    x = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    clResult = clTotal - x;
+                }
+                if (leave.LeaveType == "SL")
+                {
+                    int y;
+                    y = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    slResult = slTotal - y;
+                }
+                if (leave.LeaveType == "EL")
+                {
+                    int z;
+                    z = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    elResult = elTotal - z;
+                }
+                if (leave.LeaveType == "ML")
+                {
+                    int j;
+                    j = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    mlResult = mlTotal - j;
+                }
+            }
+            else
+            {
+                leav2 = await _leaveGateway.GetMaxLeaveByEmpId(leave.EmployeeId);
+                clResult = Convert.ToDecimal(leav2.CLBalance);
+                slResult = Convert.ToDecimal(leav2.SLBalance);
+                elResult = Convert.ToDecimal(leav2.ELBalance);
+                mlResult = Convert.ToDecimal(leav2.MLBalance);
+                if (leave.LeaveType == "CL")
+                {
+                    int x;
+                    x = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    clResult = clTotal - x;
+                }
+                if (leave.LeaveType == "SL")
+                {
+                    int y;
+                    y = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    slResult = slTotal - y;
+                }
+                if (leave.LeaveType == "EL")
+                {
+                    int z;
+                    z = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    elResult = elTotal - z;
+                }
+                if (leave.LeaveType == "ML")
+                {
+                    int j;
+                    j = await _leaveGateway.SumIssuedDays(leave.EmployeeId, leave.LeaveType) + leave.IssuedDays;
+                    mlResult = mlTotal - j;
+                }
+            }
+
+
+            leave = new Leave
+                {
+                    EmployeeId = leave.EmployeeId,
+                    LeaveApplyDate = leave.LeaveApplyDate,
+                    ApplyFromDate = leave.ApplyFromDate,
+                    ApplyToDate = leave.ApplyToDate,
+                    ApplyDays = leave.ApplyDays,
+                    LeaveType = leave.LeaveType,
+                    Reason = leave.Reason,
+
+                    IssuedFromDate = leave.IssuedFromDate,
+                    IssuedToDate = leave.IssuedToDate,
+                    IssuedDays = leave.IssuedDays,
+                    IssuedRemarks = leave.IssuedRemarks,
+                    CLTotal = clTotal,
+                    SLTotal = slTotal,
+                    ELTotal = elTotal,
+                    MLTotal = mlTotal,
+                    CLBalance = clResult,
+                    SLBalance = slResult,
+                    ELBalance = elResult,
+                    MLBalance = mlResult,
+                    LeaveIssuedDate = leave.LeaveIssuedDate,
+                    AddedBy = 0,
+                    AddedDate = DateTime.Today,
+                    EditBy = 0,
+                    EditedDate = DateTime.Today,
+
+                };
+            await _leaveGateway.Save(leave);
+            leaves.Add(leave);
+            await _jsRuntime.ToastrSuccess("Leave Created Successfully");
+            await LoadLeave();
+            await LoadLeaveByEmpId();
+
+            //  await LoadLeaveId();
+           // ResetLeaveData();
+        }
+
+
+
+
+        //update 
+        else
+        {
+            // Update the department if confirmed
+            // Update the department if confirmed
+            leave = new Leave
+                {
+                    LeaveId = tempId,
+                    EmployeeId = leave.EmployeeId,
+                    LeaveApplyDate = leave.LeaveApplyDate,
+                    ApplyFromDate = leave.ApplyFromDate,
+                    ApplyToDate = leave.ApplyToDate,
+                    ApplyDays = leave.ApplyDays,
+                    LeaveType = leave.LeaveType,
+                    Reason = leave.Reason,
+                    IssuedFromDate = leave.IssuedFromDate,
+                    IssuedToDate = leave.IssuedToDate,
+                    IssuedDays = leave.IssuedDays,
+                    IssuedRemarks = leave.IssuedRemarks,
+                    CLTotal = clTotal,
+                    SLTotal = slTotal,
+                    ELTotal = elTotal,
+                    MLTotal = mlTotal,
+                    CLBalance = clResult,
+                    SLBalance = slResult,
+                    ELBalance = elResult,
+                    MLBalance = mlResult,
+                    LeaveIssuedDate = leave.LeaveIssuedDate,
+                    AddedBy = 0,
+                    AddedDate = DateTime.Today,
+                    EditBy = 0,
+                    EditedDate = DateTime.Today,
+                };
+            await _leaveGateway.Edit(leave);
+            leaves.Add(leave);
+            await LoadLeave();
+            await _jsRuntime.ToastrSuccess("Leave Updated Successfully");
+        }
+    }
+
+
+
+
+
+    private void ResetLeaveData()
+    {
+        
+        leave = new Leave();
+        leavesByEmpId = null;
+    }
+
+    private async Task AddNew()
+    { 
+        isFocusedRowEnabled = false;
+        title = "Entry";
+        ResetLeaveData();
+        leave.LeaveApplyDate = DateTime.Today;
+        leave.ApplyFromDate = DateTime.Today;
+        leave.LeaveIssuedDate = DateTime.Today;
+        leave.IssuedFromDate = DateTime.Today;
+        await LoadLeave();
+
+
+    }
+
+
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+       {
+   
+        var item = e.DataItem as Leave;
+        if (item != null)
+        {
+            tempId = item.LeaveId;
+        }
+
+        title = "Update";
+        await LoadLeaveId();
+    }
+}

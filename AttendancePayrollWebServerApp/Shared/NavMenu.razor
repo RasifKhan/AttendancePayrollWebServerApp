@@ -1,0 +1,334 @@
+﻿@using AttendancePayrollWebServerApp.Service.IService
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserPermissionService PermissionService
+
+<div class="sidebar @StateCssClass">
+    <DxTreeView AllowSelectNodes="true" CssClass="app-sidebar">
+        <Nodes>
+            <DxTreeViewNode NavigateUrl="./" Text="Overview" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            
+            @if (HasAnySetupAccess)
+            {
+                <DxTreeViewNode Text="Setup" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("categorypage") && ModuleAccess["categorypage"])
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}categorypage")" Text="Category"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("companypage") && ModuleAccess["companypage"])
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}companypage")" Text="Company"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("departmentpage") && ModuleAccess["departmentpage"])
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}departmentpage")" Text="Department"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("leavepage") && ModuleAccess["leavepage"])
+            {
+                <DxTreeViewNode Text="Leave" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        <DxTreeViewNode NavigateUrl="@($"{baseUrl}leavepage")" Text="Entry Leave"></DxTreeViewNode>
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+        </Nodes>
+    </DxTreeView>
+</div>
+
+@code {
+    private string baseUrl = string.Empty;
+    private const string rootNodeCssClass = "root-item";
+    private Dictionary<string, bool> ModuleAccess { get; set; } = new Dictionary<string, bool>();
+    private bool HasAnySetupAccess => ModuleAccess.Any(kvp => 
+        (kvp.Key == "categorypage" ||
+         kvp.Key == "companypage" ||
+         kvp.Key == "departmentpage") && 
+         kvp.Value);
+
+    [Parameter]
+    public string? StateCssClass { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = NavigationManager.BaseUri;
+        
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var userIdClaim = user.FindFirst("UserAccountId");
+            if (userIdClaim != null)
+            {
+                var userId = userIdClaim.Value;
+                var modules = new[] { "categorypage", "companypage", "departmentpage", "leavepage" };
+
+                foreach (var module in modules)
+                {
+                    ModuleAccess[module] = await PermissionService.HasPageAccessAsync(userId, module);
+                }
+            }
+        }
+        StateHasChanged();
+    }
+}
+
+
+
+
+
+
+@* @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="sidebar @StateCssClass">
+    <DxTreeView AllowSelectNodes="true" CssClass="app-sidebar">
+        <Nodes>
+            <DxTreeViewNode NavigateUrl="./" Text="Overview" CssClass="@rootNodeCssClass"></DxTreeViewNode>
+            
+            @if (ModuleAccess.ContainsKey("categorypage") || ModuleAccess.ContainsKey("categoryItempage") || 
+                 ModuleAccess.ContainsKey("companypage") || ModuleAccess.ContainsKey("departmentpage") || 
+                 ModuleAccess.ContainsKey("designationpage") || ModuleAccess.ContainsKey("holidaypage") || 
+                 ModuleAccess.ContainsKey("sectionpage") || ModuleAccess.ContainsKey("salarysectionpage") || 
+                 ModuleAccess.ContainsKey("salarybreakdownsetupage") || ModuleAccess.ContainsKey("shiftmasterpage") || 
+                 ModuleAccess.ContainsKey("shiftdetailpage"))
+            {
+                <DxTreeViewNode Text="Setup" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("categorypage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}categorypage")" Text="Category"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("categoryItempage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}categoryItempage")" Text="Category Item"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("companypage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}companypage")" Text="Company"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("departmentpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}departmentpage")" Text="Department"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("designationpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}designationpage")" Text="Designation"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("holidaypage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}holidaypage")" Text="Holiday"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("sectionpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}sectionpage")" Text="Section"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("salarysectionpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}salarysectionpage")" Text="Salary Section"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("salarybreakdownsetupage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}salarybreakdownsetupage")" Text="Salary Setup"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("shiftmasterpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}shiftmasterpage")" Text="Shift Master"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("shiftdetailpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}shiftdetailpage")" Text="Shift Detail"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("employeelist") || ModuleAccess.ContainsKey("employeebankinformationpage"))
+            {
+                <DxTreeViewNode Text="Employee" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("employeelist"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}employeelist")" Text="Entry Employee"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("employeebankinformationpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}employeebankinformationpage")" Text="Employee Bank Info"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("leavepage"))
+            {
+                <DxTreeViewNode Text="Leave" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        <DxTreeViewNode NavigateUrl="@($"{baseUrl}leavepage")" Text="Entry Leave"></DxTreeViewNode>
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("fixdaypage") || ModuleAccess.ContainsKey("fixattendance"))
+            {
+                <DxTreeViewNode Text="Fix/Define" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("fixdaypage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}fixdaypage")" Text="Fix Day"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("fixattendance"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}fixattendance")" Text="Fix Attendance"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("dailyprocess") || ModuleAccess.ContainsKey("monthlyprocess") || ModuleAccess.ContainsKey("salaryprocess"))
+            {
+                <DxTreeViewNode Text="Process" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("dailyprocess"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}dailyprocess")" Text="Daily Process"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("monthlyprocess"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}monthlyprocess")" Text="Monthly Process"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("salaryprocess"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}salaryprocess")" Text="Salary Process"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("reportpage"))
+            {
+                <DxTreeViewNode Text="Attendance Sheet" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        <DxTreeViewNode NavigateUrl="@($"{baseUrl}reportpage")" Text="Daily Report"></DxTreeViewNode>
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("attendancesumreportpage"))
+            {
+                <DxTreeViewNode Text="Summary Sheet" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        <DxTreeViewNode NavigateUrl="@($"{baseUrl}attendancesumreportpage")" Text="Attendance Report"></DxTreeViewNode>
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("jobcardreportpage"))
+            {
+                <DxTreeViewNode Text="Job Card" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        <DxTreeViewNode NavigateUrl="@($"{baseUrl}jobcardreportpage")" Text="Job Card"></DxTreeViewNode>
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+
+            @if (ModuleAccess.ContainsKey("attendancedailylist") || ModuleAccess.ContainsKey("reportPageTest") || 
+                 ModuleAccess.ContainsKey("attendancesumpage") || ModuleAccess.ContainsKey("testscreenpage") || 
+                 ModuleAccess.ContainsKey("companydxgridtest") || ModuleAccess.ContainsKey("noneprocessedfixattendancelist") || 
+                 ModuleAccess.ContainsKey("usersetup") || ModuleAccess.ContainsKey("usermodule") || 
+                 ModuleAccess.ContainsKey("useraccountsetup"))
+            {
+                <DxTreeViewNode Text="Others" CssClass="@rootNodeCssClass">
+                    <Nodes>
+                        @if (ModuleAccess.ContainsKey("attendancedailylist"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}attendancedailylist")" Text="Daily Report"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("reportPageTest"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}reportPageTest")" Text="RDL Reports"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("attendancesumpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}attendancesumpage")" Text="Summary Report"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("testscreenpage"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}testscreenpage")" Text="TestScreen"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("companydxgridtest"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}companydxgridtest")" Text="Company Grid"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("noneprocessedfixattendancelist"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}noneprocessedfixattendancelist")" Text="TestFixedList"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("usersetup"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}usersetup")" Text="User setup"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("usermodule"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}usermodule")" Text="User Module Test"></DxTreeViewNode>
+                        }
+                        @if (ModuleAccess.ContainsKey("useraccountsetup"))
+                        {
+                            <DxTreeViewNode NavigateUrl="@($"{baseUrl}useraccountsetup")" Text="Test User Entry"></DxTreeViewNode>
+                        }
+                    </Nodes>
+                </DxTreeViewNode>
+            }
+        </Nodes>
+    </DxTreeView>
+</div>
+
+
+@code {
+    private string baseUrl;
+    private string roleSuperAdmin = "SuperAdmin";
+    private const string rootNodeCssClass = "root-item";
+    private Dictionary<string, bool> ModuleAccess { get; set; } = new Dictionary<string, bool>();
+
+    [Parameter]
+    public string? StateCssClass { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = NavigationManager.BaseUri;
+
+        var modules = new[]
+        {
+            "leavepage","categorypage", "categoryItempage", "companypage", "departmentpage", "designationpage",
+            "holidaypage", "sectionpage", "salarysectionpage", "salarybreakdownsetupage",
+            "shiftmasterpage", "shiftdetailpage", "employeelist", "employeebankinformationpage",
+            "fixdaypage", "fixattendance", "dailyprocess", "monthlyprocess",
+            "salaryprocess", "reportpage", "attendancesumreportpage", "jobcardreportpage",
+            "attendancedailylist", "reportPageTest", "attendancesumpage", "testscreenpage",
+            "companydxgridtest", "noneprocessedfixattendancelist", "usersetup", "usermodule",
+            "useraccountsetup"
+        };
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        foreach (var module in modules)
+        {
+            ModuleAccess[module] = user.HasClaim(c => c.Type == "ModuleAccess" && c.Value.StartsWith($"{module}:", StringComparison.OrdinalIgnoreCase));
+            Console.WriteLine($"NavMenu: Module {module} access = {ModuleAccess[module]}");
+        }
+
+        StateHasChanged();
+    }
+}
+
+
+
+
+ *@

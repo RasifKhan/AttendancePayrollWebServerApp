@@ -1,0 +1,328 @@
+﻿@page "/holidaypage"
+@using AttendancePayrollWebServerApp.Helper
+@inject HolidayGateway _holidayGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+
+<div class="row my-0">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Holiday</h3>
+        @if (title != "Entry")
+        {
+            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew"
+                    style="outline: none; width:auto;">
+                Add New FixHoly Day
+            </button>
+        }
+    </div>
+
+    <div class="col-10">
+        <EditForm Model="@holiday" OnValidSubmit="@UpsertFixHolyday">
+            <DataAnnotationsValidator />
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% ">
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">From Date</div>
+                        <div class="col-9">
+                            <input class="form-control custom-input" type="date" @bind="holyDateFrom" @bind:event="oninput" @onchange="OnFromDateChanged" />
+                            <ValidationMessage For="()=>holiday.FromDate"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">To Date</div>
+                        <div class="col-9">
+                            <InputDate @bind-Value="holiday.ToDate" class="form-control custom-input2"></InputDate>
+                            <ValidationMessage For="()=>holiday.ToDate"></ValidationMessage>
+                        </div>
+                    </div>
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Holiday</div>
+                        <div class="col-9">
+                            <InputSelect @bind-Value="holiday.HoliDay" class="form-select custom-input2 light-violet">
+                                <option value="0" disabled="disabled" selected> --Select Day--</option>
+                                <option value="Saturday">Saturday</option>
+                                <option value="Sunday">Sunday</option>
+                                <option value="Monday">Monday</option>\
+                                <option value="Tuesday">Tuesday</option>
+                                <option value="Wednesday">Wednesday</option>
+                                <option value="Thursday">Thursday</option>
+                                <option value="Friday">Friday</option>
+                            </InputSelect>
+                            <ValidationMessage For="()=>holiday.HoliDay"></ValidationMessage>
+                        </div>
+                    </div>
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input2">Remarks</div>
+                        <div class="col-9">
+                            <InputText @bind-Value="holiday.Remarks" class="form-control custom-input2"></InputText>
+                            <ValidationMessage For="()=>holiday.Remarks"></ValidationMessage>
+                        </div>
+                    </div>
+                   @*  <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px">@title</button> *@
+
+                </div>
+            </div>
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+
+<div class="row my-1">
+
+    @if (holidays != null && holidays.Any())
+    {
+        <DxGrid @ref="GridExp"
+                Data="@holidays"
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                PageSizeSelectorVisible="true"
+                PageSizeSelectorAllRowsItemVisible="true"
+                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                PageSize="8"
+                PagerPosition="GridPagerPosition.Bottom"
+                TextWrapEnabled="false"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                ShowSearchBox="true"
+                AutoExpandAllGroupRows="true"
+                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                SelectionMode="GridSelectionMode.Multiple"
+                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                RowClick="OnRowClick">
+            <Columns>
+                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                <DxGridDataColumn Caption="From Date" FieldName="FromDate" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+
+                <DxGridDataColumn Caption="From To" FieldName="ToDate" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+
+                <DxGridDataColumn Caption="Holiday" FieldName="HoliDay" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Remarks" FieldName="Remarks" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="FromDate" />
+            </TotalSummary>
+        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            <div class="text-center">
+               @*  <img src="/images/Glass spheres.gif"> *@
+                @* <img src="/images/Animation3.gif"> *@
+                <img src="@($"{baseUrl}/images/Animation3.gif")">
+            </div>
+        }
+        else
+        {
+            <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<Holiday> holidays = new List<Holiday>();
+
+    private Holiday holiday { get; set; } = new Holiday();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Entry";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+
+    private DateTime holyDateFrom { get; set; } = DateTime.Today;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+
+            holyDateFrom = DateTime.Today;
+            holiday.FromDate = DateTime.Today;
+            holiday.ToDate = DateTime.Today;
+            await LoadFixHolyday();
+        }
+    }
+
+    private async Task LoadFixHolyday()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        holidays = await _holidayGateway.GetHolidayList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadFixHolydayById()
+    {
+        StateHasChanged();
+        holiday = await _holidayGateway.GetHoliday(tempId);
+        holyDateFrom = holiday.FromDate;
+        StateHasChanged();
+    }
+
+    private async Task UpsertFixHolyday()
+    {
+        // bool isExist = await _holidayGateway.IsExist(holiday.FromDate, holiday.HolidayId);
+
+        // if (isExist)
+        // {
+        //     await _jsRuntime.ToastrError("The Date already exists");
+        //     return;
+        // }
+
+        bool isExist = await _holidayGateway.IsExist(holiday.FromDate, holiday.ToDate, holiday.HolidayId);
+
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("A holiday already exists within this date range");
+            return;
+        }
+
+
+
+
+
+        if (title == "Entry")
+        {
+            holiday = new Holiday
+                {
+                    FromDate = holiday.FromDate,
+                    ToDate = holiday.ToDate,
+                    HoliDay = holiday.HoliDay,
+                    Remarks = holiday.Remarks,
+
+                    Addedby = 0,
+                    AddedDate = Convert.ToDateTime("1900 - 01 - 01"),
+                    EditedBy = 0,
+                    EditedDate = Convert.ToDateTime("1900 - 01 - 01")
+                };
+
+            await _holidayGateway.Save(holiday);
+            holidays.Add(holiday);
+            await _jsRuntime.ToastrSuccess("Holyday Added Successfully");
+            await LoadFixHolyday();
+            await LoadFixHolydayById();
+            ResetData();
+
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the holiday if confirmed
+                holiday = new Holiday
+                    {
+                        HolidayId = tempId,
+
+                        FromDate = holiday.FromDate,
+                        ToDate = holiday.ToDate,
+                        HoliDay = holiday.HoliDay,
+                        Remarks = holiday.Remarks,
+                        Addedby = 0,
+                        AddedDate = Convert.ToDateTime("1900 - 01 - 01"),
+                        EditedBy = 0,
+                        EditedDate = Convert.ToDateTime("1900 - 01 - 01")
+                    };
+                await _holidayGateway.Edit(holiday);
+                holidays.Add(holiday);
+                await LoadFixHolyday();
+                await _jsRuntime.ToastrSuccess("Updated Successfully");
+            }
+            else
+            {
+                await LoadFixHolyday();
+            }
+        }
+    }
+
+    private void OnFromDateChanged()
+    {
+        holiday.FromDate = holyDateFrom;
+        holiday.ToDate = holyDateFrom;
+        StateHasChanged();
+    }
+
+    private void ResetData()
+    {
+        holiday = new Holiday();
+        holiday.FromDate = DateTime.Today;
+        holyDateFrom = DateTime.Today;
+        holiday.ToDate = DateTime.Today;
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Entry";
+        //holiday.FixDate = DateTime.Today;
+        ResetData();
+        await LoadFixHolyday();
+
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as Holiday;
+        if (item != null)
+        {
+            tempId = item.HolidayId;
+        }
+
+        title = "Update";
+        await LoadFixHolydayById();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

@@ -1,0 +1,177 @@
+﻿@inject NavigationManager Navigation
+
+<nav class="navbar header-navbar p-0 d-flex align-items-center" style="display: flex; justify-content: space-between; align-items: center;">
+    <button class="navbar-toggler bg-primary d-block" @onclick="OnToggleClick">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="ms-3 fw-bold title pe-4">Attendance & Payroll</div>
+
+    <div style="margin-left: auto; padding-right: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <AuthorizeView>
+            <Authorized>
+                <span>Hello, @context.User.Identity.Name</span>
+
+           
+  
+    <a href="/Account/Logout?returnUrl=@Uri.EscapeDataString(Navigation.Uri)"
+       style="display: inline-block;
+              padding: 0.5rem 1rem;
+              color: black;
+              text-decoration: none;
+              border-radius: 0.25rem;
+              font-weight: 500;"
+       class="logout-button">
+        Logout
+    </a>
+
+
+@* 
+                <a href="/Account/Logout?returnUrl=@Uri.EscapeDataString(Navigation.Uri)"
+                   style="display: inline-block;
+              padding: 0.5rem 1rem;
+              background-color: #007bff;
+              color: white;
+              text-decoration: none;
+              border-radius: 0.25rem;
+              font-weight: 500;"
+                   class="logout-button">
+                    Logout
+                </a> *@
+
+               @*  <a href="/Account/Logout?returnUrl=@Uri.EscapeDataString(Navigation.Uri)"
+                   style="display: inline-block;
+                          padding: 0.5rem 1rem;
+                          background: linear-gradient(90deg, #007bff, #0056b3);
+                          color: white;
+                          text-decoration: none;
+                          border-radius: 0.25rem;
+                          font-weight: 500;
+                          transition: background 0.3s ease, transform 0.2s ease;
+                          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);"
+                   onmouseover="this.style.background='linear-gradient(90deg, #0056b3, #003d80)'; this.style.transform='scale(1.05)';"
+                   onmouseout="this.style.background='linear-gradient(90deg, #007bff, #0056b3)'; this.style.transform='scale(1);'">
+                    Logout
+                </a> *@
+            </Authorized>
+            <NotAuthorized>
+                <a href="/Account/Login">Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</nav>
+
+
+
+
+
+
+@* @inject NavigationManager Navigation
+
+<nav class="navbar header-navbar p-0 d-flex align-items-center" style="display: flex; justify-content: space-between; align-items: center;">
+    <button class="navbar-toggler bg-primary d-block" @onclick="OnToggleClick">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="ms-3 fw-bold title pe-4">Attendance & Payroll</div>
+
+    <div style="margin-left: auto; padding-right: 1.5rem;">
+        <AuthorizeView>
+            <Authorized>
+                Hello, @context.User.Identity.Name
+                <a href="/Account/Logout?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">Logout</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/Account/Login">Login</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</nav>
+
+
+ *@
+
+
+
+
+
+
+@* @inject NavigationManager Navigation
+
+<nav class="navbar header-navbar p-0 " >
+    <button class="navbar-toggler bg-primary d-block" @onclick="OnToggleClick">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="ms-3 fw-bold title pe-4">Attendance & Payroll </div>
+
+
+    <AuthorizeView>
+        <Authorized>
+            Hello,@context.User.Identity.Name
+            <a href="/Account/Logout?returnUrl=@Uri.EscapeDataString(Navigation.Uri)">Logout</a>
+        </Authorized>
+        <NotAuthorized>
+            <a href="/Account/Login">Login</a>
+        </NotAuthorized>
+    </AuthorizeView>
+
+
+
+</nav>
+
+
+ *@
+
+
+
+
+
+
+
+
+
+@* 
+
+
+<AuthorizeView>
+    <Authorized>
+        Hello,@context.User.Identity.Name
+        <a href="Identity/Account/Logout">Logout</a>
+    </Authorized>
+
+
+    <NotAuthorized>
+        <a href="Identity/Account/Register">Register</a>
+        <a href="Identity/Account/Login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+ *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@code {
+    [Parameter] public bool ToggleOn { get; set; }
+    [Parameter] public EventCallback<bool> ToggleOnChanged { get; set; }
+
+    async Task OnToggleClick() => await Toggle();
+
+    async Task Toggle(bool? value = null) {
+        var newValue = value ?? !ToggleOn;
+        if(ToggleOn != newValue) {
+            ToggleOn = newValue;
+            await ToggleOnChanged.InvokeAsync(ToggleOn);
+        }
+    }
+}

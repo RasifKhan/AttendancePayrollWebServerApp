@@ -1,0 +1,380 @@
+﻿@page "/home"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Models.View
+@using System.Drawing
+@inject AttendanceDashboardGateway _attendanceDashboardGateway
+
+
+<h3>@attendanceDate</h3>
+<DxPieChart T="StatusCount"
+            Data="@ChartData"
+            Width="100%"
+            Height="400px"
+            InnerDiameter="0.5"
+            PointSelectionMode="ChartSelectionMode.Multiple"
+            SelectionChanged="@OnSelectionChanged"
+            CustomizeSeriesPoint="@CustomizePiePoint">
+    <DxPieChartSeries T="StatusCount"
+                      TArgument="string"
+                      TValue="int"
+                      ArgumentField="@(d => d.Status)"
+                      ValueField="@(d => d.Count)">
+        <DxChartSeriesLabel Visible="true"
+                            Position="RelativePosition.Outside">
+            <DxChartSeriesLabelConnector Visible="true" />
+        </DxChartSeriesLabel>
+    </DxPieChartSeries>
+    <DxChartLegend HorizontalAlignment="HorizontalAlignment.Right"
+                   VerticalAlignment="VerticalEdge.Top"
+                   Position="RelativePosition.Outside"
+                   Orientation="Orientation.Vertical" />
+</DxPieChart>
+
+<br />
+<br />
+
+
+<DxChart @ref="DetailChart"
+         T="StatusCount"
+         Data="@ChartData"
+         Width="100%"
+         Height="200px">
+
+    <DxChartCommonSeries SummaryMethod="Enumerable.Sum"
+                         NameField="@((StatusCount s) => s.Status)"
+                         ArgumentField="@(s => s.Status)"
+                         ValueField="@((StatusCount s) => s.Count)"
+                         Filter='@(s => Selection.Count == 0 || Selection.Contains(s.Status))'>
+        <SeriesTemplate Context="settings">
+            <DxChartBarSeries Settings="@settings"
+                              Color="StatusColors[settings.Name]" />
+        </SeriesTemplate>
+    </DxChartCommonSeries>
+
+    <DxChartValueAxis>
+        <DxChartAxisLabel />
+    </DxChartValueAxis>
+    <DxChartTooltip Enabled="true"
+                    Position="RelativePosition.Outside">
+        <div style="margin: 0.75rem">
+            <div class="fw-bold">@context.Point.Argument</div>
+            <div>Count: @context.Point.Value</div>
+        </div>
+    </DxChartTooltip>
+    <DxChartLegend Position="RelativePosition.Outside"
+                   HorizontalAlignment="HorizontalAlignment.Center"
+                   VerticalAlignment="VerticalEdge.Bottom" />
+    </DxChart>
+
+
+@code {
+    private class StatusCount
+    {
+        public string Status { get; set; }
+        public int Count { get; set; }
+    }
+
+    private IEnumerable<StatusCount> ChartData;
+    private DxChart DetailChart;
+    private readonly AttendanceDashboardGateway _gateway = new();
+    private readonly List<string> Selection = new();
+    private DateOnly attendanceDate{get; set;}
+
+    private readonly Dictionary<string, Color> StatusColors = new()
+    {
+        { "Total Employee", Color.FromArgb(255, 33, 150, 243) },   // Blue
+        { "Present", Color.FromArgb(255, 76, 175, 80) },  // Green
+        { "Absent", Color.FromArgb  (255, 244, 67, 54) } , //REd            //(255, 175, 82, 69) },  CHocolate
+         { "Leave", Color.FromArgb(255, 255, 193, 7) },     // Amber
+        { "Late", Color.FromArgb(255, 95, 54, 141)  }
+      //   { "United States", Color.FromArgb(255, 95, 54, 141) },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var summary = await _gateway.GetDashboardSummary();
+    //    attendanceDate = summary.MaxAttendanceDate;
+        attendanceDate = DateOnly.FromDateTime(summary.MaxAttendanceDate);
+        ChartData = new List<StatusCount>
+        {
+            new StatusCount { Status = "Total Employee", Count = summary.EmployeeTotal },
+            new StatusCount { Status = "Present", Count = summary.PresentTotal },
+            new StatusCount { Status = "Absent", Count = summary.AbsentTotal },
+            new StatusCount { Status = "Leave", Count = summary.LeaveTotal },
+            new StatusCount { Status = "Late", Count = summary.LateTotal }
+        };
+    }
+
+    private Color GetStatusColor(string status) => StatusColors[status];
+
+    private void OnSelectionChanged(PieChartSelectionChangedEventArgs e)
+    {
+        string status = e.Point.Argument.ToString();
+        if (e.IsPointSelected)
+            Selection.Add(status);
+        else
+            Selection.Remove(status);
+        DetailChart?.RefreshData();
+    }
+
+    private void CustomizePiePoint(ChartSeriesPointCustomizationSettings settings)
+    {
+        settings.PointAppearance.Color = GetStatusColor(settings.Point.Argument.ToString());
+    }
+}
+
+
+@* 
+**************************************************************
+############################################################## *@
+
+
+
+
+
+@* <DxPieChart T="DashboardSummary"
+            Data="@Data"
+            Width="100%"
+            Height="400px"
+            InnerDiameter="0.5"
+            PointSelectionMode="ChartSelectionMode.Multiple"
+            SelectionChanged="@OnSelectionChanged"
+            CustomizeSeriesPoint="@CustomizePiePoint">
+    <DxPieChartSeries T="DashboardSummary"
+                      TArgument="string"
+                      TValue="int"
+                      ArgumentField="@(d => GetStatusName(d))"
+                      ValueField="@(d => GetStatusValue(d))"
+                      Filter="@(d => d.MaxAttendanceDate != default)">
+        <DxChartSeriesLabel Visible="true"
+                            Position="RelativePosition.Outside">
+            <DxChartSeriesLabelConnector Visible="true" />
+        </DxChartSeriesLabel>
+    </DxPieChartSeries>
+    <DxChartLegend HorizontalAlignment="HorizontalAlignment.Right"
+                   VerticalAlignment="VerticalEdge.Top"
+                   Position="RelativePosition.Outside"
+                   Orientation="Orientation.Vertical" />
+    <DxChartTitle Text="Daily Attendance Summary" />
+</DxPieChart>
+
+<br />
+<br />
+ *@
+@* <DxChart @ref="DetailChart"
+         T="DashboardSummary"
+         Data="@Data"
+         Width="100%"
+         Height="200px">
+    <DxChartCommonSeries ArgumentField="@(d => d.MaxAttendanceDate)"
+                         ValueField="@(d => GetStatusValue(d))"
+                         NameField="@(d => GetStatusName(d))">
+        <SeriesTemplate Context="settings">
+            <DxChartBarSeries Settings="@settings"
+                              Color="@GetStatusColor(settings.Name)" />
+        </SeriesTemplate>
+    </DxChartCommonSeries>
+    <DxChartArgumentAxis>
+        <DxChartAxisLabel Format="ChartElementFormat.ShortDate" />
+    </DxChartArgumentAxis>
+    <DxChartValueAxis>
+        <DxChartAxisLabel Format="ChartElementFormat.Decimal" />
+    </DxChartValueAxis>
+    <DxChartTooltip Enabled="true"
+                    Position="RelativePosition.Outside">
+        <div style="margin: 0.75rem">
+            <div class="fw-bold">@context.Point.SeriesName</div>
+            <div>Count: @context.Point.Value</div>
+            <div>Date: @((DateTime)context.Point.Argument).ToShortDateString()</div>
+        </div>
+    </DxChartTooltip>
+    <DxChartLegend Position="RelativePosition.Outside"
+                   HorizontalAlignment="HorizontalAlignment.Center"
+                   VerticalAlignment="VerticalEdge.Bottom" />
+</DxChart> *@
+
+@* @code {
+    private IEnumerable<DashboardSummary> Data;
+    private DxChart DetailChart;
+    private readonly AttendanceDashboardGateway _gateway = new();
+    private readonly List<string> Selection = new();
+
+    private readonly Dictionary<string, Color> StatusColors = new()
+    {
+        { "Present", Color.FromArgb(255, 76, 175, 80) },  // Green
+        { "Absent", Color.FromArgb(255, 244, 67, 54) },   // Red
+        { "Leave", Color.FromArgb(255, 255, 193, 7) },    // Amber
+        { "Total Employee", Color.FromArgb(255, 33, 150, 243) }    // Blue
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await _gateway.GetDashboardSummary();
+        Data = new List<DashboardSummary> { result };
+    }
+
+    private string GetStatusName(DashboardSummary data)
+    {
+        return Selection.Count switch
+        {
+            0 => "Total Employee",
+            _ => Selection[0]
+        };
+    }
+
+    private int GetStatusValue(DashboardSummary data)
+    {
+        return GetStatusName(data) switch
+        {
+            "Present" => data.PresentTotal,
+            "Absent" => data.AbsentTotal,
+            "Leave" => data.LeaveTotal,
+            _ => data.EmployeeTotal
+        };
+    }
+
+    private Color GetStatusColor(string status) => StatusColors[status];
+
+    private void OnSelectionChanged(PieChartSelectionChangedEventArgs e)
+    {
+        string status = e.Point.Argument.ToString();
+        if (e.IsPointSelected)
+            Selection.Add(status);
+        else
+            Selection.Remove(status);
+        DetailChart?.RefreshData();
+    }
+
+    private void CustomizePiePoint(ChartSeriesPointCustomizationSettings settings)
+    {
+        settings.PointAppearance.Color = GetStatusColor(settings.Point.Argument.ToString());
+    }
+}
+
+
+
+
+
+ *@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* <DxPieChart T="DashboardSummary"
+            Data="@Data"
+            Width="100%"
+            Height="400px"
+            InnerDiameter="0.5"
+            PointSelectionMode="ChartSelectionMode.Multiple"
+            SelectionChanged="@OnSelectionChanged"
+         >
+    <DxPieChartSeries T="DashboardSummary"
+                      TArgument="string"
+                      TValue="int"
+                      ArgumentField="si => Convert.ToString(si.EmployeeTotal)"
+                      ValueField="si => si.EmployeeTotal"
+
+
+                      SummaryMethod="Enumerable.Sum"
+                   >
+
+                      <DxChartSeriesLabel Visible="true"
+                            Position="RelativePosition.Outside"
+                            ValueFormat="ChartElementFormat.Thousands(1)">
+            <DxChartSeriesLabelConnector Visible="true" />
+        </DxChartSeriesLabel>
+    </DxPieChartSeries>
+    <DxChartLegend HorizontalAlignment="HorizontalAlignment.Right"
+                   VerticalAlignment="VerticalEdge.Top"
+                   Position="RelativePosition.Outside"
+                   Orientation="Orientation.Vertical" />
+    <DxChartTitle Text="Top Sales Worldwide" />
+</DxPieChart>
+<br />
+<br />
+<DxChart @ref="DetailChart"
+         T="DashboardSummary"
+         Data="@Data"
+         Width="100%"
+         Height="200px">
+
+
+
+
+    <DxChartArgumentAxis>
+        <DxChartAxisLabel Format="ChartElementFormat.Month" />
+    </DxChartArgumentAxis>
+    <DxChartTooltip Enabled="true"
+                    Position="RelativePosition.Outside">
+        <div style="margin: 0.75rem">
+            <div class="fw-bold">@context.Point.SeriesName</div>
+            <div>@string.Format("Amount in {0}: {1:$0,.#K}", ((DateTime)context.Point.Argument).ToString("MMMM"), (int)context.Point.Value)</div>
+        </div>
+    </DxChartTooltip>
+    <DxChartLegend Visible="false" />
+</DxChart>
+ *@
+
+
+
+
+@*
+@code {
+    DxChart DetailChart;
+    readonly List<string> FilteredCountries = new List<string>() { "EmployeeTotal", "AbsentTotal", "PresentTotal", "LeaveTotal" };
+    readonly List<string> Selection = new List<string>();
+    IEnumerable<DashboardSummary> Data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await _attendanceDashboardGateway.GetDashboardSummary();
+        Data = new List<DashboardSummary> { result };  // Wrap the single object in a list
+    }
+
+
+
+
+
+    Dictionary<string, Color> mainPalette = new() {
+        { "EmployeeTotal", Color.FromArgb(255, 95, 54, 141) },
+        { "AbsentTotal", Color.FromArgb(255, 77, 92, 117) },
+        { "PresentTotal", Color.FromArgb(255, 130, 110, 69) },
+        { "LeaveTotal", Color.FromArgb(255, 175, 82, 69) },
+
+
+
+
+
+    };
+
+
+    void OnSelectionChanged(PieChartSelectionChangedEventArgs e)
+    {
+        string country = e.Point.Argument.ToString();
+        if (e.IsPointSelected)
+            Selection.Add(country);
+        else
+            Selection.Remove(country);
+        DetailChart?.RefreshData();
+    }
+
+
+    void CustomizePiePoint(ChartSeriesPointCustomizationSettings settings)
+    {
+        settings.PointAppearance.Color = mainPalette[settings.Point.Argument.ToString()];
+    }
+} *@

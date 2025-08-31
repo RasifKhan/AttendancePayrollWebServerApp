@@ -1,0 +1,271 @@
+﻿@page "/attendancedailylist"
+@using DevExpress.Export
+
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@using AttendancePayrollWebServerApp.Models.View
+
+@inject AttendanceViewGateway _attendanceViewGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+<link rel="stylesheet" href="/css/CustomGridHeightwidth.css">
+
+
+
+<div class="row my-0" style="height:5% ; ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ;  margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">Daily Attendance Report </h3>
+        
+        @if (attendances != null && attendances.Any())
+        {
+             <button type="button" class="btn btn-primary btn-success custom-input" @onclick="ExportXlsx_Click " style="outline: none; width:auto;">Export To Excel</button>    
+        }
+    </div>
+</div>
+
+<div class="row my-0"  >
+    <div class="col-10">
+        <div class="row" style="width: 100% ">
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:50%">
+           @*  <div class="row my-1 align-items-center">
+                <div class="col-3 custom-input">Attendance Date</div>
+                <div class="col-9">
+
+
+                    <input type="date" id="attendanceDate" class="form-control custom-input" @bind="attendanceDate" />
+                 
+                </div>
+                </div>*@
+                                <div class="row my-1 align-items-center">
+                                    <div class="col-3 custom-input">Attendance Date</div>
+                                    <div class="col-9">
+                                        <input type="date" id="attendanceDate"
+                                               class="form-control custom-input @(isDateValid ? "" : "is-invalid")"
+                                               @bind="attendanceDate"
+                                               @bind:event="oninput"
+                                               @onchange="ValidateDate" />
+                                        @if (!isDateValid)
+                                        {
+                                            <div class="invalid-feedback">
+                                                Please enter a valid date.
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+            </div> 
+
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:50%">
+                 <div class="row my-1 align-items-center">
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input ms-2" @onclick="ExecuteReport">Report</button>
+                      </div>
+                </div>
+            </div>
+
+           @*  <button class="btn btn-primary btn-success" @onclick="ExportXlsx_Click">Export To Excel</button> *@
+
+        </div>
+    </div>
+</div>
+
+
+
+<div>
+    @if (attendances != null && attendances.Any())
+        {
+        <div class="row my-1 dxbl-grid">
+            @*   <div class="row my-1"> *@
+                 <DxGrid @ref="GridExp"
+                                        Data="@attendances"
+
+                                        ShowGroupPanel="true"
+                                        ShowFilterRow="true"
+                                        ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                        PageSizeSelectorVisible="true"
+                                        PageSizeSelectorAllRowsItemVisible="true"
+                                        PageSizeSelectorItems="@(new int[] { 50,100,150,300,500, 1000 })"
+                                        PageSize="150"
+                                        PagerPosition="GridPagerPosition.Bottom"
+                                        TextWrapEnabled="false"
+                                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                        ShowSearchBox="true"
+                                         
+                                        AutoExpandAllGroupRows="true"
+                                        GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                        SelectionMode="GridSelectionMode.Multiple"
+                                        SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                        
+
+
+                                        FocusedRowEnabled="false" FocusedRowChanged="OnFocusedRowChanged"
+                                        RowClick="OnRowClick"
+
+                                       >
+                                     <Columns >
+                                            <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                                <DxGridDataColumn Caption="Attendance Date" FieldName="AttendanceDate" Width="200px" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                                                <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId" Width="200px" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                                                <DxGridDataColumn Caption="Employee Name" FieldName="EmployeeName" Width="200px" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                                                <DxGridDataColumn Caption="Department" FieldName="DepartmentName" Width="200px"  />
+                                                <DxGridDataColumn Caption="Section" FieldName="SectionName" Width="150"  />
+                                                <DxGridDataColumn Caption="Designation" FieldName="DesignationName" Width="150"  />
+                                                 <DxGridDataColumn Caption="Status" FieldName="Status" Width="150" />
+                                                <DxGridDataColumn Caption="Shift" FieldName="ShiftName" Width="150"  />
+                                                <DxGridDataColumn Caption="Shift In" FieldName="ShiftIn" Width="150px" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Shift Out" FieldName="ShiftOut" Width="150px" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Time In" FieldName="TimeIn" Width="150px" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Time Out" FieldName="TimeOut" Width="150px" DisplayFormat="hh:mm tt" />
+                                               
+                                                <DxGridDataColumn Caption="Over Time" FieldName="OT" Width="150px" DisplayFormat="HH:mm" />
+                                       
+                                    </Columns>
+                                        <TotalSummary>
+                                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="AttendanceDate" />
+                                        </TotalSummary>
+
+
+
+                                        
+
+
+
+                                    </DxGrid>
+        </div>
+        }
+
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+            <div class="text-center">
+                @* <img src="/images/Glass spheres.gif"> *@
+                <img src="/images/Animation3.gif">
+            </div>
+        }
+
+        else
+        {
+            //no records
+            <p>@recordMessage</p>
+        }
+    }
+
+</div>
+
+@code {
+    private List<AttendanceView> attendances = new List<AttendanceView>();
+    private DateTime attendanceDate = DateTime.Today;
+
+    private string? recordMessage { get; set; } = "Click the button to see report...";
+    private bool IsLoading { get; set; }
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //  await LoadAttendances();
+            recordMessage = "Click button to see report...";
+        }
+    }
+
+    // private async Task ExecuteReport()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     attendances = await _attendanceViewGateway.GetAttendanceViewList(attendanceDate);
+       
+    //     if (!attendances.Any())
+    //     {
+    //         recordMessage = "No records found...";
+           
+    //     }
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+    private async Task ExecuteReport()
+    {
+        if (!isDateValid)
+        {
+            recordMessage = "Please enter a valid date.";
+            return;
+        }
+
+        IsLoading = true;
+        StateHasChanged();
+        attendances = await _attendanceViewGateway.GetAttendanceViewList(attendanceDate);
+
+        if (!attendances.Any())
+        {
+            recordMessage = "No records found...";
+        }
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+
+
+    private bool isDateValid = true;
+    private void ValidateDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            attendanceDate == DateTime.MinValue ||
+            attendanceDate.Year < 1900)
+        {
+            isDateValid = false;
+        }
+        else
+        {
+            isDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+     
+        var item = e.DataItem as Section;
+        if (item != null)
+        {
+            tempId = item.SectionId;
+        }
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+        {
+                ExportSelectedRowsOnly = true,
+              //ExportSelectedRowsOnly = ExportSelectedRowsOnly,
+            //  CustomizeCell = OnCustomizeCell
+            });
+    }
+
+
+    // async Task ExportXls_Click()
+    // {
+    //     await Grid.ExportToXlsAsync("ExportResult", new GridXlExportOptions()
+    //         {
+    //            // ExportSelectedRowsOnly = ExportSelectedRowsOnly,
+    //            // CustomizeCell = OnCustomizeCell
+    //         });
+    //}
+
+}
+
+
+

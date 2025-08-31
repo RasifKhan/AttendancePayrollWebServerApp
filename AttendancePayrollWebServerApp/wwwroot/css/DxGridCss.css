@@ -1,0 +1,29 @@
+﻿.grid-modified-cell {
+    background-color: rgba(var(--bs-primary-rgb), 0.15) !important;
+}
+
+
+/*.my-other-icon::before {
+    content: "\f00c";*/ /* Example for FontAwesome check icon */
+    /*font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}*/
+
+
+
+
+.my-submit-icon::before {
+    content: "\f0c7"; /* FontAwesome floppy disk icon */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+}
+
+.my-revert-icon::before {
+    content: "\f0e2"; /* fa-rotate-left / undo */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    margin-right: 5px;
+}
+
+
+

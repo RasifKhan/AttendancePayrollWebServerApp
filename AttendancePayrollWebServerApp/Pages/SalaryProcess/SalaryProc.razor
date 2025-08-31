@@ -1,0 +1,239 @@
+﻿@page "/salaryprocess"
+@using AttendancePayrollWebServerApp.Gateway
+@using System.Data.SqlClient
+@inject IConfiguration Configuration
+
+@inject SalaryBreakdownSetupGateway _salaryBreakdownSetupGateway
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomGridHeightwidth.css")">
+
+
+<h3>Salary Process</h3>
+<div class="form-group">
+    <label for="fromDate">From Date:</label>
+    <div style="width:50%">
+        <input type="date" id="fromDate" class="form-control @(isFromDateValid ? "" : "is-invalid")" @bind="FromDate"
+               @bind:event="oninput" @onchange="ValidateFromDate" />
+        @if (!isFromDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+
+    <label for="toDate">To Date:</label>
+    <div style="width:50%">
+        <input type="date" id="toDate" class="form-control @(isToDateValid ? "" : "is-invalid")" @bind="ToDate"
+               @bind:event="oninput" @onchange="ValidateToDate" />
+        @if (!isToDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+
+
+    <label for="toDate">Pay Date:</label>
+    <div style="width:50%">
+        <input type="date" id="toDate" class="form-control @(isPayDateValid ? "" : "is-invalid")" @bind="PayDate"
+               @bind:event="oninput" @onchange="ValidatePayDate" />
+        @if (!isPayDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+</div>
+
+<br />
+<button class="btn btn-primary" @onclick="ExecuteStoredProcedure" disabled="@isProcessing">
+    @if (isProcessing)
+    {
+        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        <span>Processing...</span>
+    }
+    else
+    {
+        <span>Execute Process</span>
+    }
+</button>
+
+
+@if (isProcessing)
+{
+    <div class="mt-3">
+        <div class="text-center mt-2">
+            Processing....
+        </div>
+    </div>
+}
+
+
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header @modalHeaderClass">
+                    <h5 class="modal-title">@modalTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p style="white-space: pre-line">@message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private DateTime FromDate = DateTime.Today;
+
+    private static DateTime ToDate = DateTime.Today;
+  //  private  DateTime ToDate = DateTime.Today;
+
+    private string SalStr = string.Empty;   //ToDate.ToString("MMM-yyyy");
+
+    private DateTime PayDate = DateTime.Today;
+    private string message = string.Empty;
+    private string modalHeaderClass = string.Empty;
+    private string modalTitle = string.Empty;
+    private bool showModal = false;
+    private bool isProcessing = false;
+    private string procMessage = string.Empty;
+
+    private bool isFromDateValid = true;
+    private bool isToDateValid = true;
+    private bool isPayDateValid = true;
+    private string baseUrl;
+    //Dec-2024
+   
+
+
+
+   // private string cutDate = ToDate.ToString("MMM-yyyy");
+
+
+
+    //private DateTime cutDate =Convert.ToDateTime();
+    //private string cutDate = ToDate.ToString("MMM-yyyy");
+
+    //private string SalStr=string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            ToDate = DateTime.Today;
+            FromDate = DateTime.Today;
+            PayDate = DateTime.Today;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExecuteStoredProcedure()
+    {
+        if (!isFromDateValid || !isToDateValid || !isPayDateValid)
+        {
+            return;
+        }
+
+        try
+        {
+            isProcessing = true;
+            List<string> processingMessages = new List<string>();
+            try
+            {
+               SalStr = ToDate.ToString("MMM-yyyy");
+               var result = await _salaryBreakdownSetupGateway.ExecuteSalaryProc(FromDate,ToDate,PayDate,SalStr);
+               processingMessages.Add($"Date {procMessage}: {result.Message}");
+               StateHasChanged();
+            }
+
+            catch (Exception ex)
+            {
+                processingMessages.Add($"Error processing {procMessage}: {ex.Message}");
+                modalHeaderClass = "bg-danger";
+                throw;
+            }
+
+            message = string.Join("\n", processingMessages);
+            modalHeaderClass = "bg-info";
+            modalTitle = "Processing Results";
+        }
+        catch (Exception ex)
+        {
+            message = $"An error occurred during processing: {ex.Message}";
+            modalHeaderClass = "bg-danger";
+            modalTitle = "Processing Error";
+        }
+        finally
+        {
+            showModal = true;
+            isProcessing = false;
+
+            ToDate = DateTime.Today;
+            FromDate = DateTime.Today;
+            PayDate = DateTime.Today;
+
+            StateHasChanged();
+        }
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+    private void ValidateFromDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            FromDate == DateTime.MinValue ||
+            FromDate.Year < 1900)
+        {
+            isFromDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    private void ValidateToDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            ToDate == DateTime.MinValue ||
+            ToDate.Year < 1900)
+        {
+            isToDateValid = false;
+        }
+        else
+        {
+            isToDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+
+    private void ValidatePayDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            PayDate == DateTime.MinValue ||
+            PayDate.Year < 1900)
+        {
+            isPayDateValid = false;
+        }
+        else
+        {
+            isPayDateValid = true;
+        }
+        StateHasChanged();
+    }
+}

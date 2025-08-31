@@ -1,0 +1,246 @@
+﻿@page "/shiftmasterpage"
+@using AttendancePayrollWebServerApp.Helper
+@inject ShiftMasterGateway _shiftMasterGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+
+
+ <div class="row my-0" style="height:5% ; ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Shift Type</h3>
+        @if (title != "Create")
+        {
+                    <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                            style="outline: none; width:auto;">
+                                Add New Shift Master
+                    </button>
+        }
+    </div>
+</div>
+
+
+
+
+<div class="row my-0"  >
+               <div class="col-10" >
+                  <EditForm Model="@ShiftMaster" OnValidSubmit="@UpsertShiftMaster">
+                    <DataAnnotationsValidator /> 
+                    <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+                  
+                        
+                       <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Shift Type</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="ShiftMaster.ShiftType"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>ShiftMaster.ShiftType"></ValidationMessage>
+                                </div>
+                           </div>
+
+                            <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>  
+                       </div>
+                </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+<div class="row my-1">
+@if (ShiftsMasters != null && ShiftsMasters.Any())
+    {
+                          <DxGrid 
+                            @ref="GridExp"
+                            Data="@ShiftsMasters"
+                           
+                            ShowGroupPanel="true"
+                            ShowFilterRow="true"
+                            ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                            PageSizeSelectorVisible="true"
+                            PageSizeSelectorAllRowsItemVisible="true"
+                            PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                            PageSize="8" 
+                            PagerPosition="GridPagerPosition.Bottom"
+                            TextWrapEnabled="false"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            ShowSearchBox="true"
+                            AutoExpandAllGroupRows="true"
+                            GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                            SelectionMode="GridSelectionMode.Multiple"
+                            SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                            FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                            RowClick="OnRowClick"
+                            >
+                         <Columns >
+                                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                   
+                                    <DxGridDataColumn Caption="ShiftTypeMasterId" FieldName="ShiftTypeMasterId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                  
+                         <DxGridDataColumn Caption="Shift Type" FieldName="ShiftType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                        </Columns>
+                                <TotalSummary>
+                                    <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="ShiftTypeMasterId" />
+                                </TotalSummary>
+                        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+                        <div class="text-center">
+                                       <img src="/images/Animation3.gif">
+                        </div>
+        }
+        else
+        {
+                           <p>No Records Found.</p>
+        }
+    }
+</div> 
+
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<ShiftMaster> ShiftsMasters = new List<ShiftMaster>();
+
+    private ShiftMaster ShiftMaster { get; set; } = new ShiftMaster();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+
+
+    IGrid? GridExp { get; set; } 
+
+    //IEnumerable<IGrid> GridExp = new IEnumerable<IGrid>();
+    //IGrid GridExp { get; set; } = GridEditNewRowPosition.Bottom;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadShiftMasterData();
+        }
+    }
+
+    private async Task LoadShiftMasterData()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        ShiftsMasters = await _shiftMasterGateway.GetShiftMasterList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadCompanyId()
+    {
+        StateHasChanged();
+        ShiftMaster = await _shiftMasterGateway.GetShiftMaster(tempId);
+        ShiftMaster.ShiftType = ShiftMaster.ShiftType;
+       
+        StateHasChanged();
+    }
+
+
+
+    private async Task UpsertShiftMaster()
+    {
+        bool isExist = await _shiftMasterGateway.IsExist(ShiftMaster.ShiftType,ShiftMaster.ShiftTypeMasterId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Shift Type already exists");
+            return;
+        }
+
+        if (title == "Create")
+        {
+            ShiftMaster = new ShiftMaster
+                {
+                    ShiftType = ShiftMaster.ShiftType
+                  
+                };
+            await _shiftMasterGateway.Save(ShiftMaster);
+            ShiftsMasters.Add(ShiftMaster);
+            await _jsRuntime.ToastrSuccess("Shift Type Created Successfully");
+            await LoadShiftMasterData();
+            await LoadCompanyId();
+            ResetData();
+        }
+
+    
+        if (title == "Update")
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the ShiftMaster if confirmed
+                ShiftMaster = new ShiftMaster
+                    {
+                        ShiftTypeMasterId = tempId,
+                        ShiftType = ShiftMaster.ShiftType
+                      
+                    };
+                await _shiftMasterGateway.Edit(ShiftMaster);
+                ShiftsMasters.Add(ShiftMaster);
+                await LoadShiftMasterData();
+                await _jsRuntime.ToastrSuccess("Shift Type Updated Successfully");
+            }
+            else
+            {
+                await LoadShiftMasterData();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        ShiftMaster = new ShiftMaster();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadShiftMasterData();
+        //await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as ShiftMaster;
+        if (item != null)
+        {
+            tempId = item.ShiftTypeMasterId;
+        }
+
+        title = "Update";
+        await LoadCompanyId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

@@ -1,0 +1,1658 @@
+﻿@page "/employeelist/create"
+@page "/employeelist/edit/{EmployeeId}"
+
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@using System.Text.RegularExpressions
+@using AttendancePayrollWebServerApp.Service.IService
+@inject EmployeeGateway _employeeGateway
+@inject CompanyGateway _companyGateway
+@inject DepartmentGateway _departmentGateway
+@inject ShiftDetailGateway _shiftGateway
+@inject SalarySectionGateway _salarySectionGateway
+@inject SectionGateway _sectionGateway
+@inject DesignationGateway _designationGateway
+@inject CategoryItemGateway _categoryItemGateway
+@inject NavigationManager _navigationManager
+@inject ShiftMasterGateway _shiftMasterGateway
+@inject IFileUpload _fileUpload
+@inject IWebHostEnvironment _webHostEnvironment
+@inject IJSRuntime _jsRuntime
+
+
+@* @attribute [Authorize(Roles = SD.Role_SuperAdmin)] *@
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+<div class="row my-0" style="height:5% ; width: 100% ;">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Employee</h3>
+      
+        @if (title == "Entry")
+        {
+            <a href="employeelist" class="btn btn-primary custom-input"
+            style="outline: none; width:auto;">Back to List</a> 
+        }
+        @if(title=="Update")
+        {
+                   @*  <div class="col-4 offset-2">
+            <NavLink href="/employeelist/create" class="btn btn-primary form-control">Add New Employee</NavLink>
+           </div> *@
+
+              
+             @* 
+                 <button @onclick="NavigateToCreate" class="btn btn-primary custom-input"
+                    style="outline: none; width:auto; margin-left: 820px;">Add New</button> *@
+                
+
+              @*    <a href="/employeelist/create" class=" btn btn-primary custom-input"
+                style="outline: none; width:auto;   margin-left: 820px; ">Add New</a>  *@
+
+                <a href="employeelist" class="col-20 btn btn-primary custom-input"
+            style="outline: none; width:auto;">Back to List</a> 
+
+               
+        }
+
+    </div>
+</div>
+
+
+@* 
+<div class="row my-0" style="height:5%; width: 100%;">
+    <div class="d-flex justify-content-between align-items-start" style="height:5%; width: 100%; margin-left: -12px;">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Employee</h3>
+
+        @if (title == "Entry")
+        {
+                <button @onclick="NavigateToList" class="btn btn-primary custom-input"
+                        style="outline: none; width:auto;">Back to List</button> 
+        }
+        @if (title == "Update")
+        {
+                <div>
+                    <button @onclick="NavigateToCreate" class="btn btn-primary custom-input"
+                            style="outline: none; width:auto; margin-right: 10px;">Add New</button> 
+                    <button @onclick="NavigateToList" class="btn btn-primary custom-input"
+                            style="outline: none; width:auto;">Back to List</button> 
+                </div>
+        }
+    </div>
+</div>
+
+ *@
+
+                      @* ********************************************************** *@
+<div class="row my-0"  >
+    <div class="col-10">
+        @if (IsLoading)
+        {
+                <div class="text-center">
+                    <img src="/images/Glass spheres.gif">
+                </div>
+        }
+        else
+        {
+            <EditForm Model="employee" OnValidSubmit="UpsertEmployee" method="post">
+                <DataAnnotationsValidator />
+                <div class="row" style="width: 120% "> 
+                    <!-------------------Left---------------------->
+                      <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:35%">
+
+                                       <div class="row my-1 align-items-center">
+                                                <div class="col-3 custom-input2">Emp Id</div>
+                                                   <div class="col-9">
+                                                   @if (title == "Entry")
+                                                   {
+                                                      <InputText @bind-Value="employee.EmployeeId"  class="form-control custom-input2" style="margin-left: -12px; " ></InputText>
+                                                   }
+                                                   else
+                                                   {
+                                                              <InputText @bind-Value="employee.EmployeeId"  class="form-control custom-input2" style="margin-left: -12px; background-color: gray;color: white" disabled></InputText>
+                                                   }
+
+                                                   @* <ValidationMessage For="()=>employee.EmployeeId"></ValidationMessage> *@
+                                                </div>
+                                        </div>
+
+
+                                        <div class="row my-1 align-items-center">
+                                               <div class="col-3 custom-input2">Emp Name</div>
+                                                   <div class="col-9">
+                                                    <InputText @bind-Value="employee.EmployeeName"  class="form-control custom-input2"style="margin-left: -12px; "></InputText>
+                                                    @* <ValidationMessage For="()=>employee.EmployeeName"></ValidationMessage> *@
+                                            </div>
+                                        </div>
+                            
+
+
+                                        <div class="row my-1 align-items-center">
+                                          <div class="col-3 custom-input2">Company</div>
+                                            <div class="col-9">
+                                                    <InputSelect @bind-Value="employee.CompanyId" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                    <option value="0" disabled="disabled" selected>-- Select Company --</option>
+                                                    @foreach (var items in companeis)
+                                                    {
+                                                                             <option value="@items.CompanyId">@items.CompanyName</option>
+                                                    }
+                                                </InputSelect>
+                                               @*  <ValidationMessage For="()=>employee.CompanyId"></ValidationMessage> *@
+                                            </div>
+                                         </div>
+
+
+                                            <div class="row my-1 align-items-center">
+                                                  <div class="col-3 custom-input2">Department</div>
+                                                <div class="col-9">
+                                                        <InputSelect @bind-Value="employee.DepartmentId" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                        <option value="0" disabled="disabled" selected>-- Select Department --</option>
+                                                            @foreach (var items in departments)
+                                                            {
+                                                                                     <option value="@items.DepartmentId">@items.DepartmentName</option>
+                                                            }
+                                                    </InputSelect>
+                                                    @* <ValidationMessage For="()=>employee.DepartmentId"></ValidationMessage> *@
+                                                </div>
+                                            </div>
+
+
+
+                                                 <div class="row my-1 align-items-center">
+                                                      <div class="col-3 custom-input2">Section</div>
+                                                    <div class="col-9">
+                                                            <InputSelect @bind-Value="employee.SectionId" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                                            <option value="0" disabled="disabled" selected>-- Select Section --</option>
+                                                            @foreach (var items in sections)
+                                                            {
+                                                                     <option value="@items.SectionId">@items.SectionName</option>
+                                                            }
+                                                        </InputSelect>
+                                                        @* <ValidationMessage For="()=>employee.SectionId"></ValidationMessage> *@
+                                                    </div>
+                                                </div>
+
+
+
+                                                <div class="row my-1 align-items-center">
+                                                      <div class="col-3 custom-input2">Sub Section</div>
+                                                    <div class="col-9">
+                                                            <InputSelect @bind-Value="employee.SalarySectionId" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                                        <option value="0" disabled="disabled" selected>-- Salary Section --</option>
+                                                        @foreach (var items in salarySections)
+                                                        {
+                                                                 <option value="@items.SalarySectionId">@items.SalarySectionName</option>
+                                                        }
+                                                        </InputSelect>
+                                                       @*  <ValidationMessage For="()=>employee.SalarySectionId"></ValidationMessage> *@
+                                                    </div>
+                                                </div>
+
+
+
+                                                 <div class="row my-1 align-items-center">
+                                                      <div class="col-3 custom-input2 ">App Type</div>
+                                                             <div class="col-9">
+                                                                       <InputSelect @bind-Value="employee.AppointmentType" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                                      <option value="0" disabled="disabled" selected> -- Appointment Type --</option>
+                                                                      <option value="Contractual">Contractual</option>
+                                                                      <option value="ABC">ABC</option>
+                                                                     </InputSelect>
+                                                                     @*  <ValidationMessage For="()=>employee.AppointmentType"></ValidationMessage> *@
+                                                             </div>
+                                                 </div>
+
+
+
+
+                                                    <div class="row my-1 align-items-center">
+                                                            <div class="col-3 custom-input2">Designation</div>
+                                                        <div class="col-9">
+                                                                    <InputSelect @bind-Value="employee.DesignationId" class="form-select custom-input2 light-violet" style="margin-left: -12px; ">
+                                                                                <option value="0" disabled="disabled" selected>-- Select Designation --</option>
+                                                                    @foreach (var items in designations)
+                                                                    {
+                                                                                            <option value="@items.DesignationId">@items.DesignationName</option>
+                                                                    }
+                                                            </InputSelect>
+                                                               @*  <ValidationMessage For="()=>employee.DesignationId"></ValidationMessage> *@
+                                                        </div>
+                                                    </div>
+
+
+
+
+
+
+
+                                                            <div class="row mb-3">
+                                                                    <div class="col-12">
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input type="radio" 
+                                                                                   class="form-check-input" 
+                                                                                   name="shiftOption"
+                                                                                     value="shifttype"
+                                                                                    checked="@(selectedShiftOption == "shifttype")"
+                                                                                   @onchange="OnShiftOptionChanged" />
+                                                                            <label class="form-check-label">Shifting</label>
+                                                                        </div>
+
+
+
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input type="radio" 
+                                                                                   class="form-check-input" 
+                                                                                   name="shiftOption"
+                                                                                   value="shiftname"
+                                                                                   checked="@(selectedShiftOption == "shiftname")"
+                                                                                   @onchange="OnShiftOptionChanged" />
+                                                                            <label class="form-check-label">General</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                
+
+
+                                                                 @*   old one *@
+                                                                 @*   old one *@
+                                                             @*    @if (selectedShiftOption == "shifttype")
+                                                                {
+                                                                    <div class="row my-1 align-items-center">
+                                                                        <div class="col-3 custom-input2"> Shifting</div>
+                                                                        <div class="col-9">
+                                                                            <select 
+                                                                                    @onchange="ShiftingChangedd"
+                                                                                    class="form-select custom-input2 light-violet"
+                                                                                    style="margin-left: -12px;">
+                                                                                <option value="0" disabled="disabled" selected>-- Shifting Type --</option>
+                                                                                @foreach (var items in shiftMtTypes)
+                                                                                {
+                                                                                   <option value="@items.ShiftTypeMasterId">@items.ShiftType</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                } *@
+
+
+
+                                                @* <option value="0" disabled="disabled" selected=@(employee?.ShiftTypeMasterId == null)>
+                                                    -- Shifting Type --
+                                                </option> *@
+
+
+                                               @*     <option value="0"
+                                                disabled="@(employee?.EmployeeId != null)"
+                                                selected=@(employee?.ShiftTypeMasterId == null)>
+                                               -- Shifting Type --
+                                                  </option> *@
+
+
+
+
+                                                                @if (selectedShiftOption == "shifttype")
+                                                                {
+                                                                    <div class="row my-1 align-items-center">
+                                                                        <div class="col-3 custom-input2">Shifting</div>
+                                                                        <div class="col-9">
+                                                                            <select @onchange="ShiftingChangedd"
+                                                                                    class="form-select custom-input2 light-violet"
+                                                                                    style="margin-left: -12px;">
+                                                                                     <option value="0"
+                                                                                        disabled="@(employee?.EmployeeId != null )"
+                                                                                        selected=@(employee?.ShiftTypeMasterId == null)>
+                                                                                    -- Shifting Type--
+                                                                                     </option>
+
+                                                                                @if (shiftMtTypes != null)
+                                                                                {
+                                                                                    @foreach (var items in shiftMtTypes)
+                                                                                    {
+                                                                                        <option value="@items.ShiftTypeMasterId"
+                                                                                                selected="@(employee?.ShiftTypeMasterId == items.ShiftTypeMasterId)">
+                                                                                            @items.ShiftType
+                                                                                        </option>
+                                                                                    }
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+
+
+
+
+                        @if (selectedShiftOption == "shiftname")
+                        {
+                            <div class="row my-1 align-items-center">
+                                <div class="col-3 custom-input2">General</div>
+                                <div class="col-9">
+                                    <select @onchange="GeneralChangedd"
+                                            class="form-select custom-input2 light-violet"
+                                            style="margin-left: -12px;">
+                                        <option value="0"
+                                                disabled="@(employee?.EmployeeId != null || employee?.EmployeeId == null )"
+                                                selected=@(employee?.ShiftDetailId == null)>
+                                            -- Shift Name --
+                                        </option>
+
+                                        @if (shiftDetails != null)
+                                        {
+                                            @foreach (var items in shiftDetails)
+                                            {
+                                                <option value="@items.ShiftDetailId"
+                                                        selected="@(employee?.ShiftDetailId == items.ShiftDetailId)">
+                                                    @items.ShiftName
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        }
+
+
+                                                          @* 
+                                                           @if (selectedShiftOption == "shiftname")
+                                                                {
+                                                                    <div class="row my-1 align-items-center">
+                                                                        <div class="col-3 custom-input2"> General</div>
+                                                                        <div class="col-9">
+                                                                            <select 
+                                                                                    @onchange="GeneralChangedd"
+                                                                                    class="form-select custom-input2 light-violet"
+                                                                                    style="margin-left: -12px;">
+                                                                                <option value="0" disabled="disabled" selected>-- Shift Name --</option>
+                                                                                @foreach (var items in shiftDetails)
+                                                                                {
+                                                                                    <option value="@items.ShiftDetailId">@items.ShiftName</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                }
+
+ *@
+
+
+
+                                                                @* --------------------Old one ------------- *@
+                                                                      @* --------------------Old one ------------- *@
+                                                         
+                                                                      
+                                                                      @*                                                                               
+                                                                @if (selectedShiftOption == "shiftname")
+                                                                {
+                                                                    <div class="row my-1 align-items-center">
+                                                                        <div class="col-3 custom-input2"> General</div>
+                                                                        <div class="col-9">
+                                                                            <select 
+                                                                                    @onchange="GeneralChangedd"
+                                                                                    class="form-select custom-input2 light-violet"
+                                                                                    style="margin-left: -12px;">
+                                                                                <option value="0" disabled="disabled" selected>-- Shift Name --</option>
+                                                                                @foreach (var items in shiftDetails)
+                                                                                {
+                                                                                    <option value="@items.ShiftDetailId">@items.ShiftName</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                } *@
+
+
+
+
+
+
+
+                                                                  @*   @if (selectedShiftOption == "type")
+                                                                    {
+                                                                        <div class="row my-1 align-items-center">
+                                                                            <div class="col-3 custom-input2">General</div>
+                                                                            <div class="col-9">
+                                                                                <select value="@employee.ShiftTypeMtId"
+                                                                                        @onchange="ShiftTypeChanged"
+                                                                                        class="form-select custom-input2 light-violet"
+                                                                                        style="margin-left: -12px;">
+                                                                                    <option value="0" disabled="disabled" selected>-- Shift Name --</option>
+                                                                                    @foreach (var items in shiftMasters)
+                                                                                    {
+                                                                                        <option value="@items.ShiftTypeMtId">@items.ShiftType</option>
+                                                                                    }
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    } *@
+
+
+
+
+                                                          @*     @if (selectedShiftOption == "type")
+                                                                {
+                                                                    <div class="row my-1 align-items-center">
+                                                                        <div class="col-3 custom-input2">General</div>
+                                                                        <div class="col-9">
+                                                                            <select value="@employee.ShiftTypeMtId" 
+                                                                                    @onchange="ShiftTypeChanged"
+                                                                                    class="form-select custom-input2 light-violet"
+                                                                                    style="margin-left: -12px;">
+                                                                                <option value="0" disabled="disabled" selected>-- Shift Name --</option>
+                                                                               @foreach (var items in shiftMasters)
+                                                                                {
+                                                                                  <option value="@items.ShiftTypeMtId">@items.ShiftType</option>
+                                                                                }
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                } *@
+
+
+                                                 @*  ************************************** *@
+                                                          <div class="row my-1 align-items-center" style="height:4% ; width: 100% ;">                                        
+                                                                              
+                                                                             <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                     <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Emp Type</div>                                                         
+                                                                                          <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">                                                                     
+                                                                                                <InputSelect @bind-Value="employee.EmployeeTypeCatItemId" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                                                <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                           
+                                                                                                            @foreach (var items in employeeTypeCategoryItems)
+                                                                                                            {
+                                                                                                                            <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                                                                                            }
+                                                                                                </InputSelect>
+                                                                                                  @*  <ValidationMessage For="()=>employee.EmployeeTypeCatItemId"></ValidationMessage> *@
+                                                                                           </div>
+                                                                               </div>
+
+
+
+                                                                               <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                       <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">Floor</div>
+                                                                                       <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                           <InputSelect @bind-Value="employee.FloorCatItemId" class="form-select custom-input2 light-violet custom-input2" style="width: 135%; margin-left:0px;">
+                                                                                                        <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                       @*  <option value="0"  selected></option> *@
+                                                                                                                    @foreach (var items in floorCategoryItems)
+                                                                                                                    {
+                                                                                                                         <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                                                                                                    }
+                                                                                                </InputSelect>
+                                                                                         @*  <ValidationMessage For="()=>employee.FloorCatItemId"></ValidationMessage>               *@
+                                                                                       </div>
+                                                                               </div>                                                                                      
+                                                                 </div>
+
+                                                      @*//**************************************// *@
+                                                      @*  ************************************** *@
+                                                      <div class="row my-0 align-items-center" style="height:4.7% ; width: 100% ;">                                        
+                                                                          <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                 <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Pay Source</div>                                                         
+                                                                                      <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">                                                                     
+                                                                                            <InputSelect @bind-Value="employee.PaySource" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                                         <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                        <option value="Bank">Bank</option>
+                                                                                                        <option value="Cash">Cash</option>
+                                                                                            </InputSelect>
+                                                                                           @*  <ValidationMessage For="()=>employee.PaySource"></ValidationMessage> *@
+                                                                                       </div>
+                                                                           </div>
+
+
+
+                                                                           <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                   <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">Line</div>
+                                                                                   <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                       <InputSelect @bind-Value="employee.LineCatItemId" class="form-select custom-input2 light-violet custom-input2" style="width: 135%; margin-left:0px;">
+                                                                                                    <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                   @*  <option value="0"  selected></option> *@
+                                                                                                @foreach (var items in lineCategoryItems)
+                                                                                                {
+                                                                                                            <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                                                                                }
+                                                                                            </InputSelect>
+                                                                                       @*  <ValidationMessage For="()=>employee.LineCatItemId"></ValidationMessage>               *@
+                                                                                   </div>
+                                                                           </div>                                                                                      
+                                                             </div>
+                                                        @*//**************************************// *@
+                          
+                                                      @*  ************************************** *@
+                                                         <div class="row my-0 align-items-center" style="height:4.7% ; width: 100% ;">                                    
+                                                                                  <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                                <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Basic Sal</div>
+                                                                                                 <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+                                                                                                         <InputNumber @bind-Value="employee.BasicSalary" class="form-control custom-input2  custom-input2" style="width: 100%; margin-left:9px;">                                                                                
+                                                                                                        </InputNumber>
+                                                                                                           @* <ValidationMessage For="()=>employee.BasicSalary"></ValidationMessage> *@
+                                                                                                 </div>
+                                                                                   </div>
+
+
+
+                                                                                    <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                             <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">Salary</div>
+                                                                                                  <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                       <InputNumber @bind-Value="employee.Salary" class="form-control custom-input2 custom-input2" style="width: 135%; margin-left:0px;">
+                                                                                       
+                                                                                                        </InputNumber>
+                                                                                                   @*  <ValidationMessage For="()=>employee.Salary"></ValidationMessage>               *@
+                                                                                                  </div>
+                                                                                    </div>                                                                                      
+                                                          </div>
+                                                    @*  //*******************************************// *@
+
+
+
+                                                        <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">Join Date</div>
+                                                                <div class="col-9">
+                                                                            <InputDate @bind-Value="employee.JoinDate" class="form-control custom-input2" style="margin-left: -12px; "></InputDate>
+                                                                </div>
+                                                            </div>
+
+
+                                                    <div class="row my-0 align-items-center">
+                                                           <div class="col-3 custom-input2">Card No</div>
+                                                               <div class="col-9">
+                                                                <InputText @bind-Value="employee.CardID"  class="form-control custom-input2"style="margin-left: -12px; "></InputText>
+                                                               @*  <ValidationMessage For="()=>employee.CardID"></ValidationMessage> *@
+                                                        </div>
+                                                    </div>
+
+
+                                                        @*  ************************************** *@
+                                                        <div class="row my-1 align-items-center" style="height:4.4% ; width: 100% ;">                                        
+                                                                            <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                            <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Overtime</div>
+
+                                                                                                                    <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                    <InputSelect @bind-Value="employee.OverTimeYN" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                                <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                        <option value="Y">Y</option>
+                                                                                                        <option value="N">N</option>
+                                                                                            </InputSelect>
+                                                                                              @*   <ValidationMessage For="()=>employee.OverTimeYN"></ValidationMessage> *@
+                                                                                       </div>
+                                                                             </div>
+
+
+
+                                                                            <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                        <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">Lunch</div>
+                                                                                                <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                       <InputSelect @bind-Value="employee.LunchYN" class="form-select custom-input2 light-violet custom-input2" style="width: 135%; margin-left:0px;">
+                                                                                                         <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                            <option value="Y">Y</option>
+                                                                                                            <option value="N">N</option>
+                                                                                            </InputSelect>
+                                                                                        @* <ValidationMessage For="()=>employee.LunchYN"></ValidationMessage>               *@
+                                                                                     </div>
+                                                                             </div>                                                                                      
+                                                                    </div>
+                                                        @*  //*******************************************// *@
+
+
+
+                                                        @*  ************************************** *@
+                                                                     <div class="row my-0 align-items-center" style="height:5.2% ; width: 100% ;">                                        
+                                                                                <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                                <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Transport</div>
+
+                                                                                                                        <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                        <InputSelect @bind-Value="employee.TransportYN" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                                    <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                            <option value="Y">Y</option>
+                                                                                                            <option value="N">N</option>
+                                                                                                </InputSelect>
+                                                                                                       @*  <ValidationMessage For="()=>employee.TransportYN"></ValidationMessage> *@
+                                                                                           </div>
+                                                                                 </div>
+
+
+
+                                                                                <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                            <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">Active</div>
+                                                                                                    <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                                       <InputText @bind-Value="employee.ActiveYN" class="form-control custom-input2  custom-input2" style="width: 135%; margin-left:0px; background-color: gray;color: white" disabled>
+                                                                                        
+                                                                                                          </InputText>
+                                                                                         
+                                                                                         </div>
+                                                                                 </div>                                                                                      
+                                                                     </div>
+                                                        @*//*******************************************// *@
+
+
+                                                        @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height:5.2% ; width: 100% ;">                                        
+                                                                    <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                    <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">PF</div>
+
+                                                                                                            <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                            <InputSelect @bind-Value="employee.ProvidentFundYN" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                        <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                <option value="Y">Y</option>
+                                                                                                <option value="N">N</option>
+                                                                                    </InputSelect>
+                                                                                                @*  <ValidationMessage For="()=>employee.ProvidentFundYN"></ValidationMessage> *@
+                                                                                </div>
+                                                                        </div>
+
+
+
+                                                                            <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                    <div class="col-3 custom-input2" style="height: 99%; margin-left: 32px;">BGMEAID</div>
+                                                                                        <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                <InputText @bind-Value="employee.BGMEAID" class="form-control custom-input2  custom-input2" style="width: 135%; margin-left:6px;" >
+
+                                                                                                </InputText>
+                                                                                </div>
+                                                                        </div>                                                                                                    
+                                                            </div>
+                                                        @*  //*******************************************// *@
+
+
+                                                        @*  ************************************** *@
+                                                        <div class="row my-0 align-items-center" style="height:5% ; width: 100% ;">                                        
+                                                                            <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                            <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Registration</div>
+
+                                                                                                                    <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                    <InputText @bind-Value="employee.RegistrationNo" class="form-control custom-input2  custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                       
+                                                                                            </InputText>
+                                                                                                           @*  <ValidationMessage For="()=>employee.RegistrationNo"></ValidationMessage> *@
+                                                                                       </div>
+                                                                             </div>
+
+
+
+                                                                                  <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                                <div class="col-3 custom-input2" style="height: 99%; margin-left: 38px;">TIN</div>
+                                                                                                <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                       <InputText @bind-Value="employee.TinNo" class="form-control custom-input2  custom-input2" style="width: 135%; margin-left:0px;" >
+
+                                                                                                      </InputText>
+                                                                                     </div>
+                                                                             </div>                                                                                                    
+                                                       </div>
+                                                     @*//*******************************************//*@
+
+
+
+
+                                                     @*******************************************@
+                                                       <div class="row my-0 align-items-center" style="height:4.8% ; width: 100% ;">                                        
+                                                                <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                        <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Confirm</div>
+
+                                                                                                                <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                            <InputText @bind-Value="employee.ConfirmYN" class="form-control custom-input2  custom-input2" style="width: 100%; margin-left:9px; background-color: gray;color: white" disabled>
+
+                                                                                        </InputText>
+                                                                                                        
+                                                                                   </div>
+                                                                         </div>
+
+                                                            <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                        <div class="col-3 custom-input2" style="height: 99%; margin-left: 28px;">Conf.Date</div>
+                                                                                <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                       <InputDate @bind-Value="employee.ConfirmDate" class="form-control custom-input2  custom-input2" style="width: 148%; margin-left:0px; background-color: gray;color: white" disabled>
+                                                                                        
+                                                                                      </InputDate>
+                                                                     </div>
+                                                             </div>                                                                                      
+                                                         </div>
+                                                       @*//*******************************************//*@
+
+                                                       @*******************************************@
+                                                          <div class="row my-0 align-items-center" style="height:5.3% ; width: 100% ;">                                        
+                                                                    <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                            <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Release</div>
+
+                                                                                                                    <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                                <InputText @bind-Value="employee.ReleaseYN" class="form-control custom-input2  custom-input2" style="width: 100%; margin-left:9px; background-color: gray;color: white" disabled>
+
+                                                                                            </InputText>
+
+                                                                                       </div>
+                                                                             </div>
+
+                                                                <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                            <div class="col-3 custom-input2" style="height: 99%; margin-left: 28px;">Rels.Date</div>
+                                                                                    <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                          <InputDate @bind-Value="employee.ReleaseDate" class="form-control custom-input2  custom-input2" style="width: 148%; margin-left:0px; background-color: gray;color: white" disabled>
+
+                                                                                          </InputDate>
+                                                                         </div>
+                                                                 </div>                                                                                      
+                                                        </div>
+                                                        @*//*******************************************//*@
+
+                                                         <div class="row my-0 align-items-center">
+                                                                   <div class="col-3 custom-input2">Bank</div>
+                                                                       <div class="col-9">
+                                                                                    <InputText @bind-Value="employee.BankName"  class="form-control custom-input2" style="margin-left: -12px; background-color: gray;color: white" disabled></InputText>
+                                                                </div>
+                                                            </div>
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                   <div class="col-3 custom-input2">Bank Acc.</div>
+                                                                       <div class="col-9">
+                                                                                <InputText @bind-Value="employee.BankAccNo"  class="form-control custom-input2"style="margin-left: -12px; background-color: gray;color: white "disabled></InputText>
+                                                                </div>
+                                                            </div>
+
+                      </div>
+                      <!--------------------------Left Ended---------------------------->
+                      <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:0%"></div>
+                      <!-------------------------- Middle ---------------------------->
+                      <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:32%">
+
+
+
+
+                                                     @*  ************************************** *@
+                                                    <div class="row my-1 align-items-center" style="height:5% ; width: 103% ; ">                                        
+                                                                    <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                    <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">Gender</div>
+
+                                                                                                            <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                            <InputSelect @bind-Value="employee.Sex" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                        <option value="0" disabled="disabled" selected>-Select-</option>
+                                                                                                    <option value="Male">Male</option>
+                                                                                                        <option value="Female">Female</option>
+                                                                                    </InputSelect>
+                                                                                                    @* <ValidationMessage For="()=>employee.Sex"></ValidationMessage> *@
+                                                                               </div>
+                                                                     </div>
+
+
+
+                                                                          <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                        <div class="col-3 custom-input2" style="height: 99%; margin-left: 32px;">Religion</div>
+                                                                                        <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                       <InputSelect @bind-Value="employee.Religion" class="form-select custom-input2 light-violet custom-input2" style="width: 145%; margin-left:0px;">
+                                                                                                                             <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                                                    <option value="Buddist">Buddist</option>
+                                                                                                                                    <option value="Cristian">Cristian</option>
+                                                                                                                                    <option value="Islam">Islam</option>
+                                                                                                                                    <option value="Sanatan">Sanatan</option>
+                                                                                                                         </InputSelect>
+                                                                                                                      @*  <ValidationMessage For="()=>employee.Religion"></ValidationMessage> *@
+                                                                          </div>
+                                                                       </div>                                                            
+                                                     </div>
+                                                    @*  //*******************************************// *@
+                                 
+                                                    <div class="row my-0 align-items-center" style="display: flex; align-items: center;">
+                                                                      <div class="col-4 custom-input2" style="flex: 0 0 auto; width:28%; ">Marital Status</div>
+                                                              <div class="col-5">
+                                                                    <InputSelect @bind-Value="employee.MaritalStatus" class="form-select light-violet custom-input2" style="width:199%; margin-left: -22px;">
+                                                                           @*  <InputSelect @bind-Value="employee.CompanyId" class="form-select custom-input2 light-violet" style="margin-left: -12px; "> *@
+                                                                            <option value="0" disabled="disabled" selected>-- Select Marital Status --</option>
+                                                                                    <option value="Married">Married</option>
+                                                                                        <option value="Unmarried">Unmarried</option>
+                                                                </InputSelect>     
+                                                                   @*  <ValidationMessage For="() => employee.MaritalStatus"></ValidationMessage> *@
+                                                              </div>
+                                                     </div>
+                                               
+
+
+
+
+                                                    <div class="row my-1 align-items-center">
+                                                            <div class="col-3 custom-input2">P.Strength</div>
+                                                                <div class="col-9">
+                                                                    <InputText @bind-Value="employee.PhysicalStrength" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                </div>
+                                                    </div>
+
+                                                    <div class="row my-1 align-items-center">    
+                                                                    <div class="col-3 custom-input2">Experience</div>
+                                                                    <div class="col-9">    
+                                                                        <InputText @bind-Value="employee.Experience" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                    </div>             
+                                                    </div>                 
+
+
+
+                                                  <div class="row my-1 align-items-center">           
+                                                            <div class="col-3 custom-input2">D.of Birth</div>                  
+                                                            <div class="col-9">       
+                                                                       <InputDate @bind-Value="employee.DateOfBirth" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputDate>
+                                                            </div>
+                                                   </div>
+
+
+                                                      @* 
+                                                      <div class="row my-1 align-items-center">
+                                                        <div class="col-3 custom-input2">Age Birth   </div>
+                                                        <div class="col-9">
+                                                                        <InputDate @bind-Value="employee.DateOfBirth" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputDate>
+                                                        </div>
+                                                      </div>
+                                                    *@
+
+
+                                                        <div class="row my-1 align-items-center">
+                                                          <div class="col-3 custom-input2">Mobile No</div>
+                                                             <div class="col-9">
+                                                                        <InputText @bind-Value="employee.MobileNo" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                             </div>
+                                                        </div>
+
+                                                        <div class="row my-1 align-items-center">
+                                                            <div class="col-3 custom-input2">EMG.Cont</div>
+                                                                <div class="col-9">
+                                                                            <InputText @bind-Value="employee.EmergencyContact" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                               </div>
+                                                        </div>
+
+                                                         <div class="row my-1 align-items-center">
+                                                          <div class="col-3 custom-input2">National Id</div>
+                                                                 <div class="col-9">
+                                                                        <InputText @bind-Value="employee.NID" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                </div>
+                                                        </div>
+
+
+
+                                                        <div class="row my-1 align-items-center">
+                                                            <div class="col-3 custom-input2">Birth Cert.</div>
+                                                                    <div class="col-9">
+                                                                            <InputText @bind-Value="employee.BirthCertificateNo" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                    </div>
+                                                        </div>
+                                                    
+
+                                                        <div class="row my-1 align-items-center">
+                                                              <div class="col-3 custom-input2">Passport No</div>
+                                                                <div class="col-9">
+                                                                                <InputText @bind-Value="employee.PassportNo" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                </div>
+                                                        </div>
+
+
+                                                        <div class="row my-1 align-items-center">
+                                                            <div class="col-3 custom-input2">Serv.Book</div>
+                                                                 <div class="col-9">
+                                                                                <InputText @bind-Value="employee.DrivingLicenseNo" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                 </div>
+                                                       </div>
+
+
+
+                                                         @*  ************************************** *@
+                                                          <div class="row my-0 align-items-center" style="height:5% ; width: 103% ; ">                                        
+                                                                        <div class="row my-0 align-items-center position-relative" style="height:90%; width: 53%; ">
+                                                                                        <div class="col-3 custom-input2" style=" width: 50%; height: 99%;">H. Edu.</div>
+
+                                                                                                                <div class="position-absolute end-0 pe-0 " style="width: 54%; height: 99%; ">
+
+                                                                                                <InputSelect @bind-Value="employee.HeistEducationCatItemId" class="form-select custom-input2 light-violet custom-input2" style="width: 100%; margin-left:9px;">
+                                                                                                                 <option value="0" disabled="disabled" selected>-Select-</option>
+                                                                                                               @*  <option value="0"  selected></option> *@
+                                                                                                                        @foreach (var items in educationCategoryItems)
+                                                                                                                        {
+                                                                                                                                  <option value="@items.CategoryItemId">@items.CategoryItemName</option>
+                                                                                                                        }
+
+                                                                                                          </InputSelect>
+                                                                                                           @*  <ValidationMessage For="()=>employee.HeistEducationCatItemId"></ValidationMessage> *@
+                                                                                   </div>
+                                                                         </div>
+
+
+
+                                                                              <div class="row my-0 align-items-center " style="height:90%; width: 55%;">
+                                                                                            <div class="col-3 custom-input2" style="height: 99%; margin-left: 32px;">Blood</div>
+                                                                                            <div  style="width: 50%; height: 99%; margin-left: 12px;">
+                                                                                                                           <InputSelect @bind-Value="employee.Blood" class="form-select custom-input2 light-violet custom-input2" style="width: 145%; margin-left:0px;">
+                                                                                                                                 <option value="0" disabled="disabled" selected>--Select--</option>
+                                                                                                                                        <option value="A+">A+</option>
+                                                                                                                                        <option value="O+">O-</option>
+                                                                                                                                        <option value="AB+">AB+</option>
+                                                                                                                                        <option value="AB-">AB-</option>
+                                                                                                                             </InputSelect>
+                                                                                                                             @*   <ValidationMessage For="()=>employee.Blood"></ValidationMessage> *@
+                                                                              </div>
+                                                                         </div>                                                            
+                                                           </div>
+                                                         @*  //*******************************************// *@
+
+                                                            <div class="row my-1 align-items-center">
+                                                                    <div class="col-3 custom-input2">Body Sign</div>
+                                                                        <div class="col-9">
+                                                                            <InputText @bind-Value="employee.BodySign" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                         </div>
+                                                            </div>
+
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">Email</div>
+                                                                     <div class="col-9">
+                                                                                <InputText @bind-Value="employee.Mail" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                      </div>
+                                                            </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                 <div class="col-3 custom-input2">F. Name</div>
+                                                                      <div class="col-9">
+                                                                            <InputText @bind-Value="employee.FatherName" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                     </div>
+                                                           </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                     <div class="col-3 custom-input2">M. Name</div>
+                                                                            <div class="col-9">
+                                                                                <InputText @bind-Value="employee.MotherName" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                            </div>
+                                                            </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                    <div class="col-3 custom-input2">SP. Name</div>
+                                                                          <div class="col-9">
+                                                                                <InputText @bind-Value="employee.SpouseName" class="form-control custom-input2" style="margin-left: -10px; width:104%; "></InputText>
+                                                                          </div>
+                                                            </div>
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                    <div class="col-3 custom-input2">Present Address</div>
+                                                                             <div class="col-9">
+                                                                                        <InputTextArea @bind-Value="employee.PresentAddress" class="form-control custom-input2" style="margin-left: -10px; width:104%;"></InputTextArea>
+                                                                             </div>
+                                                            </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                    <div class="col-3 custom-input2">Permanent Address</div>
+                                                                         <div class="col-9">
+                                                                                    <InputTextArea @bind-Value="employee.PermanentAddress" class="form-control custom-input2" style="margin-left: -10px; width:104%;"></InputTextArea>
+                                                                         </div>
+                                                            </div>
+
+                       </div>
+                      <!------------------ middle Ended------------------------->
+                      <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:1%"></div>
+                      <!------------------Right---------------------------->
+                      <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:32%">
+
+
+                                                                     @*  *****************************          27-Nov-2024
+                                                                   ***************************** *@ 
+
+
+                                                           @*   <div class="col-md-2" style="border: 1px solid black;">
+                                                                <img src="@employee.ImmageUrl" class="w-100" style="max-width: 100%; max-height: 500px; object-fit: contain;">
+                                                             </div> *@
+
+                                                              
+                                                             <div class="col-md-2" style="border: 1px solid black; width: 170px; height: 210px;">
+                                                                    <img src="@tempImmageLocation" 
+                                                                         class="w-100 h-100" 
+                                                                         style="object-fit: cover; 
+                                                                                max-width: 100%; 
+                                                                                max-height: 100%;">
+                                                              </div>
+                                                                    
+
+
+                                                                   <div class="row my-0">
+                                                                    <div class="form-group pt-4 col-6">
+                                                                                @*<InputFile OnChange="HandleImageUpload"></InputFile>*@
+                                                                                <InputFile accept=".jpg, .jpeg, .png" maxfileSize="9000000" OnChange="HandleImageUpload"></InputFile>
+                                                                    </div>
+                                                                </div>
+
+
+
+
+
+
+
+
+                                                           <div class="row my-1 align-items-center">
+                                                                   <div class="col-3 custom-input2">নাম</div>
+                                                                       <div class="col-9">
+                                                                            <InputText @bind-Value="employee.EmployeeNameBan" style="margin-left: -10px;  width:104%;"  class="form-control custom-input2"></InputText>
+                                                                            @* <ValidationMessage For="()=>employee.EmployeeNameBan"></ValidationMessage> *@
+                                                                </div>
+                                                            </div>
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                   <div class="col-3 custom-input2">পিতার নাম</div>
+                                                                       <div class="col-9">
+                                                                        <InputText @bind-Value="employee.FatherNameBan" style="margin-left: -10px;  width:104%;" class="form-control custom-input2"></InputText>
+                                                                           @*  <ValidationMessage For="()=>employee.FatherNameBan"></ValidationMessage> *@
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                   <div class="col-3 custom-input2">মাতার নাম</div>
+                                                                       <div class="col-9">
+                                                                        <InputText @bind-Value="employee.MotherNameBan" style="margin-left: -10px;  width:104%;" class="form-control custom-input2"></InputText>
+                                                                         @*  <ValidationMessage For="()=>employee.MotherNameBan"></ValidationMessage> *@
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="row my-1 align-items-center">
+                                                                           <div class="col-3 custom-input2">স্বামী/স্ত্রী নাম</div>
+                                                                       <div class="col-9">
+                                                                        <InputText @bind-Value="employee.SpouseNameBan" style="margin-left: -10px;  width:104%;" class="form-control custom-input2"></InputText>
+                                                                       @*  <ValidationMessage For="()=>employee.SpouseNameBan"></ValidationMessage> *@
+                                                                </div>
+                                                            </div>
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                 <div class="col-3 custom-input2">বর্তমান ঠিকানা</div>
+                                                                      <div class="col-9">
+                                                                                <InputTextArea @bind-Value="employee.PresentAddressBan" class="form-control custom-input2" style="margin-left: -10px; width:104%;"></InputTextArea>
+                                                                         </div>
+                                                           </div>
+
+
+                                                            <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">স্থায়ী ঠিকানা</div>
+                                                                <div class="col-9">
+                                                                                    <InputTextArea @bind-Value="employee.PermanentAddressBan" class="form-control custom-input2" style="margin-left: -10px; width:104%;"></InputTextArea>
+                                                                </div>
+                                                            </div>
+
+                                                            
+
+
+
+
+                                                          </div>
+
+
+                                                          <!--------------------------------right Ended-------------------------------->
+
+                                                           <div class="my-5" >
+                                                                        <button class="btn btn-primary custom-input2" style="outline: none;  margin-left: 87px; width: 26% " >Click Here to @title</button>                                   
+                                                           </div>
+                 </div>     
+            </EditForm>  
+        }
+
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public string EmployeeId { get; set; }
+    private Employee employee { get; set; } = new Employee()
+        {
+            ImmageUrl = "/images/Default_image.png"
+        };
+
+    private string baseUrl;
+    private List<Employee> employees { get; set; } = new List<Employee>();
+    private List<Company> companeis { get; set; } = new List<Company>();
+    private List<Department> departments { get; set; } = new List<Department>();
+    private List<ShiftDetail> shiftDetails { get; set; } = new List<ShiftDetail>();
+    private List<ShiftMaster> shiftMasters { get; set; } = new List<ShiftMaster>();
+    private List<ShiftMaster> shiftMtTypes { get; set; } = new List<ShiftMaster>();
+    private List<Section> sections { get; set; } = new List<Section>();
+    private List<SalarySection> salarySections { get; set; } = new List<SalarySection>();
+    private List<Designation> designations { get; set; } = new List<Designation>();
+    private List<CategoryItem> lineCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> educationCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> employeeTypeCategoryItems { get; set; } = new List<CategoryItem>();
+    private List<CategoryItem> floorCategoryItems { get; set; } = new List<CategoryItem>();
+    public string? oldImageUrl_FromDataTable { get; set;}
+    private string? selectedShiftOption  { get; set; } //= "name"; // Default to shift name
+    private string? tempImmageLocation { get; set; } = null;
+
+    DateTime defaultDate = DateTime.Parse("1900-01-01");
+    private String title { get; set; } = "Entry";
+    private bool IsLoading { get; set; }
+    int lineCatId = 5;
+    int educationCatId = 6;
+    int employeeTypeCatId = 3;
+    int floorCatId = 4;
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            if (EmployeeId is null)
+            {
+                selectedShiftOption = "shifttype";
+                await LoadEmployee();
+                //selectedShiftOption = "name";
+                StateHasChanged();
+
+            }
+            else
+            {
+                title = "Update";
+                await LoadEmployeeByID();
+                if (employee.ShiftDetailId==null && employee.ShiftDetailId is null)  //shiftting 
+                {
+                    selectedShiftOption = "shifttype"; 
+                }
+                else                    //General
+                {
+                    selectedShiftOption = "shiftname";
+                }
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void OnShiftOptionChanged(ChangeEventArgs e)
+    {
+        selectedShiftOption = e.Value?.ToString() ?? "shifttype";
+        StateHasChanged();
+    }
+
+    async Task ShiftingChangedd(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newValue))
+        {
+            employee.ShiftTypeMasterId = newValue;
+            employee.ShiftDetailId = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private int shiftDtid { get; set; } = 0;
+    async Task GeneralChangedd(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int newValue))
+        {
+            shiftDtid = newValue;
+            employee.ShiftDetailId = shiftDtid;
+            int shiftTypeMtId = await _shiftGateway.GetShifTypeMtid(newValue);
+            employee.ShiftTypeMasterId = shiftTypeMtId;
+        }
+    }
+
+    private async Task LoadEmployee()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employee.DateOfBirth = DateTime.Now;
+        employee.JoinDate = DateTime.Now;
+        employees = await _employeeGateway.GetEmployeeList();
+        await SetEmployeeCommonItem( employee);
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    //  private async Task LoadEmployeeByID()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     employee = await _employeeGateway.GetEmployee(EmployeeId);
+    //     await SetEmployeeCommonItem(employee);
+    //     oldImageUrl_FromDataTable = employee.ImmageUrl;
+
+    //     tempImmageLocation = oldImageUrl_FromDataTable;
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+    private async Task LoadEmployeeByID()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employee = await _employeeGateway.GetEmployee(EmployeeId);
+        await SetEmployeeCommonItem(employee);
+
+        oldImageUrl_FromDataTable = employee.ImmageUrl;
+
+        string n = oldImageUrl_FromDataTable;
+        tempImmageLocation = $"{baseUrl}/{n.TrimStart('/')}";
+
+        //tempImmageLocation = oldImageUrl_FromDataTable;
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+    // string baseUrl = "https://example.com"; // Replace with your actual base URL
+    // tempImmageLocation = oldImageUrl_FromDataTable;
+
+
+    // string fullUrl = $"{baseUrl}/{tempImmageLocation.TrimStart('/')}";
+
+
+
+    //  private async Task LoadShiftMasterData()
+    // {
+    //     IsLoading = true;
+    //     StateHasChanged();
+    //     ShiftsMasters = await _shiftMasterGateway.GetShiftMasterList();
+    //     IsLoading = false;
+    //     StateHasChanged();
+    // }
+
+
+
+    private async Task SetEmployeeCommonItem(Employee employee)
+    {
+        companeis = await _companyGateway.GetCompanyList();
+        departments = await _departmentGateway.GetDepartmentsList();
+        shiftMtTypes = await _shiftMasterGateway.GetTypeShiftingList();
+        shiftDetails=await _shiftGateway.GetGeneralNameList();
+        sections = await _sectionGateway.GetSectionList();
+        salarySections = await _salarySectionGateway.GetSalarySectionList();
+        designations = await _designationGateway.GetDesignationList();
+        var categoryItems = await _categoryItemGateway.GetCategoryItemList();
+        lineCategoryItems = categoryItems.Where(data => data.CategoryId == lineCatId).ToList();
+        educationCategoryItems = categoryItems.Where(data => data.CategoryId == educationCatId).ToList();
+        employeeTypeCategoryItems = categoryItems.Where(data => data.CategoryId == employeeTypeCatId).ToList();
+        floorCategoryItems = categoryItems.Where(data => data.CategoryId == floorCatId).ToList();
+    }
+
+
+    private void NavigateToCreate()
+    {
+        _navigationManager.NavigateTo("/employeelist/create");
+    }
+
+    private async Task UpsertEmployee()
+    {
+
+        if (title == "Entry")
+        {
+             var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+             var employeeFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+        if (!string.IsNullOrEmpty(tempImmageLocation))
+        {
+            // Extract the filename from the tempImmageLocation
+            var fileName = Path.GetFileName(tempImmageLocation);
+            // Define source and destination file paths
+            var sourcePath = Path.Combine(tempFolderDirectory, fileName);
+            var destinationPath = Path.Combine(employeeFolderDirectory, fileName);
+            // Copy the file
+
+            if (File.Exists(sourcePath))
+            {
+                File.Copy(sourcePath, destinationPath, true);
+                // Update the employee's image URL
+                employee.ImmageUrl = $"/images/employee/{fileName}";
+                // Optional: Remove the temporary file after copying
+                File.Delete(sourcePath);
+            }
+        }
+       
+            ///*************/
+            bool isExist = await _employeeGateway.IsExist(employee.EmployeeId);
+            if (isExist)
+            {
+                await _jsRuntime.ToastrError("Employee Id already exists");
+                return;
+            }
+
+            employee = new Employee
+                {
+                    EmployeeId = employee.EmployeeId,
+                    EmployeeName = employee.EmployeeName,
+                    DesignationId = employee.DesignationId,
+                    CompanyId = employee.CompanyId,
+                    DepartmentId = employee.DepartmentId,
+                    SectionId = employee.SectionId,
+                    SalarySectionId = employee.SalarySectionId,
+                    FloorCatItemId = employee.FloorCatItemId,
+                    LineCatItemId = employee.LineCatItemId,
+                    ShiftTypeMasterId = employee.ShiftTypeMasterId,
+                    ShiftDetailId = employee.ShiftDetailId,
+                    Sex = employee.Sex,
+                    DateOfBirth = employee.DateOfBirth,
+                    Religion = employee.Religion,
+                    Blood = employee.Blood,
+                    MobileNo = employee.MobileNo,
+                    EmergencyContact = employee.EmergencyContact,
+                    Mail = employee.Mail,
+                    EmployeeNameBan = employee.EmployeeNameBan,
+                    FatherName = employee.FatherName,
+                    MotherName = employee.MotherName,
+                    SpouseName = employee.SpouseName,
+                    FatherNameBan = employee.FatherNameBan,
+                    MotherNameBan = employee.MotherNameBan,
+                    SpouseNameBan = employee.SpouseNameBan,
+                    PermanentAddress = employee.PermanentAddress,
+                    PermanentAddressBan = employee.PermanentAddressBan,
+                    PresentAddress = employee.PresentAddress,
+                    PresentAddressBan = employee.PresentAddressBan,
+                    MaritalStatus = employee.MaritalStatus,
+                    NID = employee.NID,
+                    BirthCertificateNo = employee.BirthCertificateNo,
+                    PassportNo = employee.PassportNo,
+                    DrivingLicenseNo = employee.DrivingLicenseNo,
+                    BodySign = employee.BodySign,
+                    JoinDate = employee.JoinDate,
+                    ReleaseYN = "N",
+                    ReleaseDate = defaultDate,
+                    Salary = employee.Salary,
+                    BasicSalary = employee.BasicSalary,
+                    OverTimeYN = employee.OverTimeYN,
+                    LunchYN = employee.LunchYN,
+                    ConfirmYN = "",
+                    ConfirmDate = defaultDate,
+                    TransportYN = employee.TransportYN,
+                    PaySource = employee.PaySource,
+                    ActiveYN = "Y",
+                    CardID = employee.CardID,
+                    SN = ExtractNumericPart(employee.EmployeeId),
+                    //SN = Convert.ToDecimal(employee.EmployeeId),
+                    EmployeeTypeCatItemId = employee.EmployeeTypeCatItemId,
+                    AppointmentType = employee.AppointmentType,
+                    HeistEducationCatItemId = employee.HeistEducationCatItemId,
+                    ProvidentFundYN = employee.ProvidentFundYN,
+                    SalaryBuyer = 1000,
+                    JoiningDateBuyer = defaultDate,
+                    BuyerShow = "Y",
+                    BankName = "",
+                    BankAccNo = "",
+                    BGMEAID = employee.BGMEAID,
+                    TinNo = employee.TinNo,
+                    RegistrationNo = employee.RegistrationNo,
+                    PhysicalStrength = employee.PhysicalStrength,
+                    Experience = employee.Experience,
+                    ImmageUrl=employee.ImmageUrl
+                };
+            var result = await _employeeGateway.Save(employee);
+            if (result.Type == "success")
+            {
+                employees.Add(employee);
+                await _jsRuntime.ToastrSuccess(result.Message);
+                ResetEmployeeData();
+            }
+            else
+            {
+                await _jsRuntime.ToastrError(result.Message);
+            }
+        }
+
+
+        //Update
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                        var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                        var employeeFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+                // var tempFolderDirectory = $"{baseUrl}{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                // var employeeFolderDirectory = $"{baseUrl}{_webHostEnvironment.WebRootPath}\\images\\employee";
+
+                
+
+                        if (!string.IsNullOrEmpty(tempImmageLocation))
+                        {
+                            // Extract the filename from the tempImmageLocation
+                            var fileName = Path.GetFileName(tempImmageLocation);
+                            // Define source and destination file paths
+                            var sourcePath = Path.Combine(tempFolderDirectory, fileName);
+                            var destinationPath = Path.Combine(employeeFolderDirectory, fileName);
+                            // Copy the file
+                            
+
+                            if (File.Exists(sourcePath))
+                            {
+                                File.Copy(sourcePath, destinationPath, true);
+                                // Update the employee's image URL
+                                employee.ImmageUrl = $"/images/employee/{fileName}";
+                                // Optional: Remove the temporary file after copying
+                                File.Delete(sourcePath);
+                            }
+                            // else
+                            // {
+                            //     await _jsRuntime.ToastrWarning("Temporary image file not found.");
+                            //     return;
+                            // }
+                        }
+                        //  var fileName = Path.GetFileName(tempImmageLocation);
+
+
+                employee = new Employee
+                                {
+                                    EmployeeId = employee.EmployeeId,
+                                    EmployeeName = employee.EmployeeName,
+                                    DesignationId = employee.DesignationId,
+                                    CompanyId = employee.CompanyId,
+                                    DepartmentId = employee.DepartmentId,
+                                    SectionId = employee.SectionId,
+                                    SalarySectionId = employee.SalarySectionId,
+                                    FloorCatItemId = employee.FloorCatItemId,
+                                    LineCatItemId = employee.LineCatItemId,
+                                    ShiftTypeMasterId = employee.ShiftTypeMasterId,
+                                    ShiftDetailId = employee.ShiftDetailId,
+                                    Sex = employee.Sex,
+                                    DateOfBirth = employee.DateOfBirth,
+                                    Religion = employee.Religion,
+                                    Blood = employee.Blood,
+                                    MobileNo = employee.MobileNo,
+                                    EmergencyContact = employee.EmergencyContact,
+                                    Mail = employee.Mail,
+                                    EmployeeNameBan = employee.EmployeeNameBan,
+                                    FatherName = employee.FatherName,
+                                    MotherName = employee.MotherName,
+                                    SpouseName = employee.SpouseName,
+                                    FatherNameBan = employee.FatherNameBan,
+                                    MotherNameBan = employee.MotherNameBan,
+                                    SpouseNameBan = employee.SpouseNameBan,
+                                    PermanentAddress = employee.PermanentAddress,
+                                    PermanentAddressBan = employee.PermanentAddressBan,
+                                    PresentAddress = employee.PresentAddress,
+                                    PresentAddressBan = employee.PresentAddressBan,
+                                    MaritalStatus = employee.MaritalStatus,
+                                    NID = employee.NID,
+                                    BirthCertificateNo = employee.BirthCertificateNo,
+                                    PassportNo = employee.PassportNo,
+                                    DrivingLicenseNo = employee.DrivingLicenseNo,
+                                    BodySign = employee.BodySign,
+                                    JoinDate = employee.JoinDate,
+                                    ReleaseYN = "N",
+                                    ReleaseDate = defaultDate,
+                                    Salary = employee.Salary,
+                                    BasicSalary = employee.BasicSalary,
+                                    OverTimeYN = employee.OverTimeYN,
+                                    LunchYN = employee.LunchYN,
+                                    ConfirmYN = "",
+                                    ConfirmDate = defaultDate,
+                                    TransportYN = employee.TransportYN,
+                                    PaySource = employee.PaySource,
+                                    ActiveYN = "Y",
+                                    CardID = employee.CardID,
+                                    //SN = Convert.ToDecimal(employee.EmployeeId),
+                                    SN = ExtractNumericPart(employee.EmployeeId),
+                                    EmployeeTypeCatItemId = employee.EmployeeTypeCatItemId,
+                                    AppointmentType = employee.AppointmentType,
+                                    HeistEducationCatItemId = employee.HeistEducationCatItemId,
+                                    ProvidentFundYN = employee.ProvidentFundYN,
+                                    SalaryBuyer = 1000,
+                                    JoiningDateBuyer = defaultDate,
+                                    BuyerShow = "Y",
+                                    BankName = "",
+                                    BankAccNo = "",
+                                    BGMEAID = employee.BGMEAID,
+                                    TinNo = employee.TinNo,
+                                    RegistrationNo = employee.RegistrationNo,
+                                    PhysicalStrength = employee.PhysicalStrength,
+                                    Experience = employee.Experience,
+                                    ImmageUrl=employee.ImmageUrl
+                                };
+
+
+
+                if(oldImageUrl_FromDataTable != employee.ImmageUrl)
+                {
+                    _fileUpload.DeleteFile(oldImageUrl_FromDataTable);
+                }
+
+                await _employeeGateway.Edit(employee);
+                employees.Add(employee);
+                await _jsRuntime.ToastrSuccess("Employee Updated Successfully");
+            }
+
+            else
+            {
+                await LoadEmployeeByID();
+            }
+
+        }
+    }
+
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        //File.Delete(tempImmageLocation);
+        IsLoading = true;
+        try
+        {
+            if (e.GetMultipleFiles().Count > 0)
+            {
+                foreach (var file in e.GetMultipleFiles())
+                {
+                    System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
+                    if (
+                            fileInfo.Extension.ToLower() == ".jpg" ||
+                            fileInfo.Extension.ToLower() == ".png" ||
+                            fileInfo.Extension.ToLower() == ".jpeg"
+                        )
+                    {
+                        //employee.ImmageUrl = await _fileUpload.UploadFile(file);
+                        var tempFolderDirectory = $"{_webHostEnvironment.WebRootPath}\\images\\employeeTemp";
+                        DeleteAllFilesInDirectory(tempFolderDirectory);
+
+                        //  _fileUpload.DeleteFile(tempImmageLocation);
+
+                        tempImmageLocation = await _fileUpload.UploadFile(file);
+
+                    }
+                    else
+                    {
+                        await _jsRuntime.ToastrError("Please select .jpg/.jpeg/.png file only");
+                        return;
+                    }
+                }
+            }
+            IsLoading = false;
+        }
+        catch (Exception ex)
+        {
+            await _jsRuntime.ToastrError(ex.Message);
+        }
+    }
+
+    // New method to delete all files in a directory
+
+
+
+    private void DeleteAllFilesInDirectory(string directoryPath)
+    {
+        try
+        {
+            // Ensure the directory exists
+            if (Directory.Exists(directoryPath))
+            {
+                // Delete all files in the directory
+                string[] files = Directory.GetFiles(directoryPath);
+                foreach (string file in files)
+                {
+                    File.Delete(file);
+                }
+            }
+            else
+            {
+                // Optionally create the directory if it doesn't exist
+                Directory.CreateDirectory(directoryPath);
+            }
+        }
+
+
+        catch (Exception ex)
+        {
+            // Log or handle the exception as needed
+            // You might want to add logging or error handling here
+            Console.WriteLine($"Error deleting files in {directoryPath}: {ex.Message}");
+        }
+    }
+
+
+
+
+
+    // private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    // {
+    //     //File.Delete(tempImmageLocation);
+    //     IsLoading = true;
+    //     try
+    //     {
+    //         if(e.GetMultipleFiles().Count > 0)
+    //         {
+    //             foreach (var file in e.GetMultipleFiles())
+    //             {
+    //                 System.IO.FileInfo fileInfo = new System.IO.FileInfo(file.Name);
+    //                 if (
+    //                         fileInfo.Extension.ToLower() == ".jpg" ||
+    //                         fileInfo.Extension.ToLower() == ".png" ||
+    //                         fileInfo.Extension.ToLower() == ".jpeg"
+    //                     )
+    //                 {
+    //                     //employee.ImmageUrl = await _fileUpload.UploadFile(file);
+    //                     _fileUpload.DeleteFile(tempImmageLocation);
+    //                     tempImmageLocation = await _fileUpload.UploadFile(file);
+
+    //                 }
+    //                 else
+    //                 {
+    //                     await _jsRuntime.ToastrError("Please select .jpg/.jpeg/.png file only");
+    //                     return;
+    //                 }
+    //             }
+    //         }
+    //         IsLoading = false;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         await _jsRuntime.ToastrError(ex.Message);
+    //     }
+    // }
+
+    private static decimal ExtractNumericPart(string input)
+    {
+        string numericPart = Regex.Match(input, @"\d+").Value;
+        return string.IsNullOrEmpty(numericPart) ? 0 : Convert.ToDecimal(numericPart);
+    }
+    private void ResetEmployeeData()
+    {
+        employee = new Employee();
+        shiftDtid = 0;
+        employee.DateOfBirth = DateTime.Now;
+        employee.JoinDate = DateTime.Now;
+        tempImmageLocation = null;
+    }
+}
+

@@ -1,0 +1,195 @@
+﻿@page "/testemployeelist"
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@inject EmployeeGateway _employeeGateway
+@inject DepartmentGateway _departmentGateway
+@inject SectionGateway _sectionGateway
+@inject DesignationGateway _designationGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+@* <div class="row my-0"> *@
+    <div class="row my-0" style="height:6% ;  ">
+    <div class="col-6">
+        <h3 class="card-title text-primary mb-3 ml-3">List of Employee</h3>
+    </div>
+    <div class="col-4 offset-2">
+        <a href="testemployeelist/create" class="btn btn-primary form-control">Add New Employee</a>
+    </div>       
+ </div>
+
+
+    @* <div class="row my-0 col-12 p-3"> *@
+        <div class="row my-1">
+        @if (employees != null && employees.Any())
+        {
+                 <DxGrid @ref="GridExp"
+                                        Data="@employees"
+                                        ShowGroupPanel="true"
+                                        ShowFilterRow="true"
+                                        ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                        CustomizeCellDisplayText="Grid_CustomizeCellDisplayText"
+                                        PageSizeSelectorVisible="true"
+                                        PageSizeSelectorAllRowsItemVisible="true"
+                                        PageSizeSelectorItems="@(new int[] { 5,8,10,12,15, 20 })"
+                                        PageSize="10" 
+                                        PagerPosition="GridPagerPosition.Bottom"
+                                        TextWrapEnabled="false"
+                                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                        ShowSearchBox="true"
+                                        AutoExpandAllGroupRows="true"
+                                        GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                        SelectionMode="GridSelectionMode.Multiple"
+                                        SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                        FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                        RowClick="OnRowClick"
+                                       >
+
+                                     <Columns >
+                                            <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                            <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                            <DxGridDataColumn Caption="Employee Name" FieldName="EmployeeName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                            <DxGridDataColumn Caption="Department" FieldName="DepartmentId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                                            <DxGridDataColumn Caption="Section" FieldName="SectionId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                                            <DxGridDataColumn Caption="Designation" FieldName="DesignationId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+
+                
+                                            <DxGridDataColumn Caption="Active" FieldName="ActiveYN" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+
+
+                                            <DxGridDataColumn Caption="Actions" Width="80px">
+                                                        <CellDisplayTemplate>
+                                                            <DxButton Text="Edit" Click="@(() => NavigateToEmployeePage(context.DataItem))" />
+                                                        </CellDisplayTemplate>
+                                            </DxGridDataColumn>         
+                                    </Columns>
+                                            <TotalSummary>
+                                                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="EmployeeId" />
+                                            </TotalSummary>
+                                    </DxGrid>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+              
+                <div class="text-center">
+               @*  <img src="/images/Animation3.gif"> *@
+                <img src="@($"{baseUrl}/images/Animation3.gif")">
+                </div>
+            }
+
+            else
+            {
+              
+                <p>No Records Found.</p>
+            }
+        }
+    </div>
+
+@code {
+    private List<Employee> employees { get; set; } = new List<Employee>();
+    private bool IsLoading { get; set; }
+
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private List<Department> DepartmentList = new List<Department>();
+    private List<Section> SectionList = new List<Section>();
+    private List<Designation> DesignationList = new List<Designation>();
+
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+
+    //  private int DeleteEmployeeId { get; set; } = 0;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadEmployees();
+        }
+    }
+
+    private async Task LoadEmployees()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        employees = await _employeeGateway.GetEmployeeList();
+        DepartmentList = await _departmentGateway.GetDepartmentsList();
+        SectionList = await _sectionGateway.GetSectionList();
+        DesignationList = await _designationGateway.GetDesignationList();
+        IsLoading = false;
+        StateHasChanged();
+        }
+       
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as Section;
+        if (item != null)
+        {
+            tempId = item.SectionId;
+        }
+
+       // title = "Update";
+      //  await LoadSectionId();
+    }
+
+
+    private void NavigateToEmployeePage(object dataItem)
+    {
+        var employee = (Employee)dataItem;
+      //  _navigationManager.NavigateTo($"/employeelist/edit/{employee.EmployeeId}");
+        _navigationManager.NavigateTo($"{baseUrl}/testemployeelist/edit/{employee.EmployeeId}");
+    }
+
+ 
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "DepartmentId")
+        {
+            e.DisplayText = DepartmentList.Where(c => c.DepartmentId == (int)e.Value).First().DepartmentName;
+        }
+
+        if (e.FieldName == "SectionId")
+        {
+            e.DisplayText = SectionList.Where(c => c.SectionId == (int)e.Value).First().SectionName;
+        }
+
+        if (e.FieldName == "DesignationId")
+        {
+            e.DisplayText = DesignationList.Where(c => c.DesignationId == (int)e.Value).First().DesignationName;
+        }
+
+       
+    }
+
+
+    // void Grid_CustomizeCellSectionName(GridCustomizeCellDisplayTextEventArgs e)
+    // {
+    //     if (e.FieldName == "SectionId")
+    //     {
+    //         e.DisplayText = SectionList.Where(c => c.SectionId == (int)e.Value).First().SectionName;
+    //     }
+    // }
+
+
+}
+
+
+

@@ -1,0 +1,378 @@
+﻿@page "/useraccountsetup"
+@using AttendancePayrollWebServerApp.Helper
+@inject UserAccountGateway _userAccountGateway
+@inject UserRoleGateway _userRoleGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+ <div class="row my-0" style="height:5% ; width: 100% ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100%; margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">@title User</h3>
+
+        @if (title != "Create")
+        {
+                    <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                            style="outline: none; width:auto;">
+                                Add New User
+                    </button>
+        }
+    </div>
+</div>
+
+
+
+
+
+<div class="row my-0"  >
+               <div class="col-10" >
+                  <EditForm Model="@user" OnValidSubmit="@UpsertUser">
+                    <DataAnnotationsValidator /> 
+                    <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+ 
+                       <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">User Id</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="user.UserAccountId"  class="form-control custom-input"></InputText>
+                            <ValidationMessage For="()=>user.UserAccountId"></ValidationMessage>
+                                </div>
+                           </div>
+
+
+                    <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">User Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="user.UserName"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>user.UserName"></ValidationMessage>
+                        </div>
+                    </div>
+
+
+                     <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Password</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="user.Password" class="form-control custom-input light-violet" placeholder="123" disabled></InputText>
+                                </div>
+                           </div>
+
+                           <div class="row my-1 align-items-center">
+                             <div class="col-3 custom-input">User Role</div>
+                               <div class="col-9">
+                            <InputSelect @bind-Value="user.RoleId" class="form-select custom-input light-violet">
+                                <option value="0" disabled="disabled" selected>-- Select Role --</option>
+                                @foreach (var items in userRoles)
+                                {
+                                    <option value="@items.RoleId">@items.RoleName</option>
+                                }
+                            </InputSelect>
+                          
+                            <ValidationMessage For="()=>user.RoleId"></ValidationMessage>
+                            </div>
+                           </div>
+
+
+
+
+
+
+
+                            <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Access</div>
+                               <div class="col-9">
+                            <InputSelect @bind-Value="user.Access" class="form-select custom-input light-violet">
+                                <option value="0" disabled="disabled" selected> -- Select Access --</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                            </InputSelect>
+                                <ValidationMessage For="()=>user.Access"></ValidationMessage>
+                                </div>
+                           </div>
+
+
+                              <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">MobileNumber</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="user.MobileNumber"  class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>user.MobileNumber"></ValidationMessage>
+                                </div>
+                           </div>
+
+
+                       <div class="row my-1 align-items-center">
+                            <div class="col-3 custom-input">Email</div>
+                                   <div class="col-9">
+                                <InputText @bind-Value="user.EMail"  class="form-control custom-input"></InputText>
+                                    <ValidationMessage For="()=>user.EMail"></ValidationMessage>
+                                    </div>
+                               </div> 
+
+
+                     <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Status</div>
+                               <div class="col-9">
+                            <InputSelect @bind-Value="user.Status" class="form-select custom-input light-violet">
+                                <option value="0" disabled="disabled" selected> -- Select Status --</option>
+                                <option value="Y">Y</option>
+                                <option value="N">N</option>
+                            </InputSelect>
+                                <ValidationMessage For="()=>user.Status"></ValidationMessage>
+                                </div>
+                           </div>
+
+
+                       </div>
+                </div>
+
+
+
+
+            <div class="row" style="width: 100% ">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+
+
+
+@* 
+<div class="row my-1">
+@if (users != null && users.Any())
+    {
+                          <DxGrid 
+                            @ref="GridExp"
+                            Data="@users"
+                            ShowGroupPanel="true"
+                            ShowFilterRow="true"
+                            ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                            PageSizeSelectorVisible="true"
+                            PageSizeSelectorAllRowsItemVisible="true"
+                            PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                            PageSize="8" 
+                            PagerPosition="GridPagerPosition.Bottom"
+                            TextWrapEnabled="false"
+                            FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                            ShowSearchBox="true"
+                            AutoExpandAllGroupRows="true"
+                            GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                            SelectionMode="GridSelectionMode.Multiple"
+                            SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                            FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                            RowClick="OnRowClick"
+                            >
+                         <Columns >
+                                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                    <DxGridDataColumn Caption="User Name" FieldName="CompanyName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Bangla Name" FieldName="CompNameBan" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Description" FieldName="Description" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Bangla Desc." FieldName="DescriptionBan" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Contact" FieldName="Contact" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Hotline" FieldName="HotLine" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                                    <DxGridDataColumn Caption="Registration" FieldName="CompReg" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                        </Columns>
+                                <TotalSummary>
+                                    <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="CompanyName" />
+                                </TotalSummary>
+                        </DxGrid>
+    }
+
+
+    else
+
+    {
+        if (IsLoading)
+        {
+                        <div class="text-center">
+                              
+                                    <img src="@($"{baseUrl}/images/Animation3.gif")">
+                        </div>
+        }
+        else
+        {
+                           <p>No Records Found.</p>
+        }
+    }
+</div> 
+ *@
+
+
+
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<UserAccount> users = new List<UserAccount>();
+    private List<UserRole> userRoles = new List<UserRole>();
+
+
+    private UserAccount user { get; set; } = new UserAccount();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Create";
+
+    //private int tempId { get; set; } = 0;
+    private string? tempId { get; set; } = "";
+
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; } 
+    private string baseUrl;
+
+
+    //IEnumerable<IGrid> GridExp = new IEnumerable<IGrid>();
+    //IGrid GridExp { get; set; } = GridEditNewRowPosition.Bottom;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadUser();
+        }
+    }
+
+    
+
+    private async Task LoadUser()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        userRoles = await _userRoleGateway.GetUserRoleList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadUserId()
+    {
+        StateHasChanged();
+        // user = await _companyGateway.GetCompany(tempId);
+        // user.CompanyName = user.CompanyName;
+        // user.CompNameBan = user.CompNameBan;
+        // user.Description = user.Description;
+        // user.DescriptionBan = user.DescriptionBan;
+        // user.Contact = user.Contact;
+        // user.HotLine = user.HotLine;
+        // user.CompReg = user.CompReg;
+     
+        StateHasChanged();
+    }
+
+    private async Task UpsertUser()
+    {
+        // bool isExist = await _companyGateway.IsExist(user.CompanyName,user.CompanyId);
+        // if (isExist)
+        // {
+        //     await _jsRuntime.ToastrError("User name already exists");
+        //     return;
+        // }
+
+        if (title == "Create")
+        {
+            user = new UserAccount
+                {
+                    UserAccountId = user.UserAccountId,
+                    UserName = user.UserName,
+                    Password = user.Password,
+                    RoleId = user.RoleId,
+                    Access = user.Access,
+                    MobileNumber = user.MobileNumber,
+                    EMail = user.EMail,
+                    Status = user.Status
+                };
+            await _userAccountGateway.Save(user);
+            users.Add(user);
+            await _jsRuntime.ToastrSuccess("User Created Successfully");
+            await LoadUser();
+            await LoadUserId();
+            ResetData();
+        }
+
+    
+        if (title == "Update")
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the user if confirmed
+                user = new UserAccount
+                    {
+                        UserAccountId = user.UserAccountId,
+                        UserName = user.UserName,
+                        Password = user.Password,
+                        RoleId = user.RoleId,
+                        Access = user.Access,
+                        MobileNumber = user.MobileNumber,
+                        EMail = user.EMail,
+                        Status = user.Status
+                    };
+              //  await _companyGateway.Edit(user);
+                users.Add(user);
+                await LoadUser();
+                await _jsRuntime.ToastrSuccess("User Updated Successfully");
+            }
+            else
+            {
+                await LoadUser();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        user = new UserAccount();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadUser();
+        //await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as User;
+        if (item != null)
+        {
+            tempId = item.UserId;
+        }
+
+        title = "Update";
+        await LoadUserId();
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

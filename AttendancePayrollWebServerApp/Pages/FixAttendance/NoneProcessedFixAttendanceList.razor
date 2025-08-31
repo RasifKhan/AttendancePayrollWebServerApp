@@ -1,0 +1,193 @@
+﻿@page "/noneprocessedfixattendancelist"
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@using AttendancePayrollWebServerApp.Models.View
+@inject EmployeeGateway _employeeGateway
+@inject DepartmentGateway _departmentGateway
+@inject SectionGateway _sectionGateway
+@inject DesignationGateway _designationGateway
+@inject FixAttendanceGateway _fixAttendanceGateway
+@inject FixAttendanceViewGateway _fixAttendanceViewGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+@* <link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css"> *@
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+@* <div class="row my-0"> *@
+    <div class="row my-0" style="height:6% ;  ">
+    <div class="col-6">
+        <h3 class="card-title text-primary mb-3 ml-3">Fixed Details</h3>
+    </div>
+    <div class="col-4 offset-2">
+        <a href="fixattendance" class="btn btn-primary form-control">Back to the fix attendance page</a>
+    </div>       
+ </div>
+
+    @* <div class="row my-0 col-12 p-3"> *@
+        <div class="row my-1">
+        @if (fixAttendanceVIewList != null && fixAttendanceVIewList.Any())
+        {
+                 <DxGrid @ref="GridExp"
+                                        Data="@fixAttendanceVIewList"
+                                       
+                                        ShowFilterRow="true"
+                                        ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                        CustomizeCellDisplayText="Grid_CustomizeCellDisplayText"
+                                        
+                                        PageSizeSelectorItems="@(new int[] { 5,8,10,12,15, 20 })"
+                                        PageSize="10" 
+                                        PagerPosition="GridPagerPosition.Bottom"
+                                        TextWrapEnabled="false"
+                                        FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                        ShowSearchBox="true"
+                                        AutoExpandAllGroupRows="true"
+                                        GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                        
+                                        FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                        RowClick="OnRowClick"
+                                        >
+
+                                     <Columns >
+                                            <DxGridSelectionColumn Width="60px" />
+                                                <DxGridDataColumn Caption="Att. Date" Width="200px"  DisplayFormat="dd-MMM-yyyy" FieldName="AttendanceDate" />
+                                                <DxGridDataColumn Caption="Employee Id" Width="200px"  FieldName="EmployeeId" />
+                                                <DxGridDataColumn Caption="Name" Width="200px"  FieldName="EmployeeName" />
+                                                <DxGridDataColumn Caption="Department" Width="200px"  FieldName="Department" />
+                                                <DxGridDataColumn Caption="Section" Width="200px"  FieldName="Section" />
+                                                <DxGridDataColumn Caption="Designation" Width="200px"  FieldName="Designation" />
+                                                <DxGridDataColumn Caption="Fixed In" Width="200px"  FieldName="TimeIn" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Actual In" Width="200px"  FieldName="ActualTimeIn" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Fixed Out" Width="200px"  FieldName="TimeOut" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Actual Out" Width="200px"  FieldName="ActualTimeOut" DisplayFormat="hh:mm tt" />
+                                                <DxGridDataColumn Caption="Processed" Width="200px"  FieldName="ProcessedYN" />
+                                            <DxGridDataColumn Caption="Remarks" Width="200px"  FieldName="Remarks" />
+
+                                           <DxGridDataColumn Caption="Actions" Width="95px">
+                                                        <CellDisplayTemplate>
+                                                                <DxButton Text="Delete" Click="@(() => DeleteItem(context.DataItem))" />
+                                                        </CellDisplayTemplate>
+                                            </DxGridDataColumn>         
+                                    </Columns>
+                                            <TotalSummary>
+                                       <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="AttendanceDate" />
+                                            </TotalSummary>
+                                    </DxGrid>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+              
+                <div class="text-center">
+               @*  <img src="/images/Animation3.gif"> *@
+                <img src="@($"{baseUrl}/images/Animation3.gif")">
+                </div>
+            }
+
+            else
+            {
+              
+                <p>No Records Found.</p>
+            }
+        }
+    </div>
+
+@code {
+
+    private List<FixAttendanceView> fixAttendanceVIewList { get; set; } = new List<FixAttendanceView>();
+    private bool IsLoading { get; set; }
+
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private List<Department> DepartmentList = new List<Department>();
+    private List<Section> SectionList = new List<Section>();
+    private List<Designation> DesignationList = new List<Designation>();
+
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+
+    //  private int DeleteEmployeeId { get; set; } = 0;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadFixedAttendances();
+        }
+    }
+
+    private async Task LoadFixedAttendances()
+    {
+        IsLoading = true;
+        StateHasChanged();
+     //   fixAttendanceVIewList = await _fixAttendanceViewGateway.GetFixAttendanceViewList();
+        DepartmentList = await _departmentGateway.GetDepartmentsList();
+        SectionList = await _sectionGateway.GetSectionList();
+        DesignationList = await _designationGateway.GetDesignationList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        var item = e.DataItem as Section;
+        if (item != null)
+        {
+            tempId = item.SectionId;
+        }
+    }
+
+
+    async Task DeleteItem(object dataItem)
+    {
+        var dataItems = (FixAttendanceView)dataItem;
+       /// int fixattendanceId = dataItems.FixAttendanceId;
+    //    await _fixAttendanceViewGateway.DeleteFixAttendanceId(fixattendanceId);
+        await LoadFixedAttendances();
+        StateHasChanged();
+    }
+   
+ 
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "DepartmentId")
+        {
+            e.DisplayText = DepartmentList.Where(c => c.DepartmentId == (int)e.Value).First().DepartmentName;
+        }
+
+        if (e.FieldName == "SectionId")
+        {
+            e.DisplayText = SectionList.Where(c => c.SectionId == (int)e.Value).First().SectionName;
+        }
+
+        if (e.FieldName == "DesignationId")
+        {
+            e.DisplayText = DesignationList.Where(c => c.DesignationId == (int)e.Value).First().DesignationName;
+        }
+
+       
+    }
+
+
+    // void Grid_CustomizeCellSectionName(GridCustomizeCellDisplayTextEventArgs e)
+    // {
+    //     if (e.FieldName == "SectionId")
+    //     {
+    //         e.DisplayText = SectionList.Where(c => c.SectionId == (int)e.Value).First().SectionName;
+    //     }
+    // }
+
+
+}
+
+
+

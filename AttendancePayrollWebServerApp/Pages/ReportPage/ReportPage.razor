@@ -1,0 +1,372 @@
+﻿@page "/reportpage"
+@inject IJSRuntime js
+@inject NavigationManager _navigation
+
+<h3>Reports</h3>
+<div class="form-group">
+    <label for="attendanceDate">Attendance Date:</label>
+    <div style="width:50%">
+        <input type="date" id="attendanceDate" class="form-control @(isDateValid ? "" : "is-invalid")" @bind="attendanceDate"
+               @bind:event="oninput" @onchange="ValidateDate" />
+        @if (!isDateValid)
+        {
+            <div class="invalid-feedback">
+                Please enter a valid date.
+            </div>
+        }
+    </div>
+</div>
+<br />
+
+
+
+
+<div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; font-family: Arial, sans-serif;">
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="AllEmployee"
+                       checked="@(selectedOption == "AllEmployee")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">All</h4>
+            </div>
+        </div>
+
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Leave"
+                       checked="@(selectedOption == "Leave")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Leave</h4>
+            </div>
+        </div>
+
+
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Present"
+                       checked="@(selectedOption == "Present")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Present</h4>
+            </div>
+        </div>
+
+       
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Male"
+                       checked="@(selectedOption == "Male")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Total Male</h4>
+            </div>
+        </div>
+
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Absent"
+                       checked="@(selectedOption == "Absent")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Absent</h4>
+            </div>
+        </div>
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Female"
+                       checked="@(selectedOption == "Female")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Total Female</h4>
+            </div>
+        </div>
+
+
+        <div style="background-color: white; padding: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center;">
+                <input type="radio"
+                       class="form-check-input custom-input"
+                       name="selectRadio"
+                       value="Late"
+                       checked="@(selectedOption == "Late")"
+                       @onchange="OnOptionChanged" />
+                <h4 style="color: #1976d2; margin: 0; margin-left: 8px;">Late</h4>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<br>
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportPDF">PDF</button>
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportXLS">XLS</button>
+@* <button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportXLS">XLS</button> *@
+
+
+@code {
+    private bool isDateValid = true;
+    private DateTime attendanceDate = DateTime.Today;
+    private string selectedOption { get; set; } = "AllEmployee";
+    private void ValidateDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            attendanceDate == DateTime.MinValue ||
+            attendanceDate.Year < 1900)
+        {
+            isDateValid = false;
+        }
+        else
+        {
+            isDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+    private void OnOptionChanged(ChangeEventArgs e)
+    {
+        selectedOption = e.Value?.ToString() ?? "AllEmployee";
+        // UpdateShiftType();
+        StateHasChanged();
+    }
+
+    // private async void OpenReportPDF() //GetPresentReport
+    // {
+    //     string attDateString = attendanceDate.ToString();
+
+    //     string baseUri = _navigation.BaseUri;
+    //     string url = $"{baseUri}api/Reportss/GetPresentReport?reportType=1";
+
+    //     if (attDateString != null)
+    //     {
+    //         url += $"&attDateString={attDateString}";
+    //     }
+    //     await js.InvokeVoidAsync("open", url, "_blank");
+    // }
+
+
+    private async void OpenReportPDF()
+    {
+        if (selectedOption == "Present")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Present";
+            //string url = $"{baseUri}api/Reportss/GetPresentReport?reportType=1?about=Present";
+            //string url = $"{baseUri}api/Reportss/GetPresentReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+
+        if (selectedOption == "AllEmployee")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=AllEmployee";
+           // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Absent")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Absent";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Leave")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Leave";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Late")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Late";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Male")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Male";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Female")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=1&about=Female";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+    }
+
+
+
+    private async void OpenReportXLS()
+    {
+
+         if (selectedOption == "Present")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Present";
+            //string url = $"{baseUri}api/Reportss/GetPresentReport?reportType=1?about=Present";
+            //string url = $"{baseUri}api/Reportss/GetPresentReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+
+        if (selectedOption == "AllEmployee")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=AllEmployee";
+           // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Absent")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Absent";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Leave")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Leave";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Late")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Late";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Male")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Male";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        if (selectedOption == "Female")
+        {
+            string baseUri = _navigation.BaseUri;
+            string url = $"{baseUri}api/Reportss/GetAttendanceReport?reportType=2&about=Female";
+            // string url = $"{baseUri}api/Reportss/GetAllReport?reportType=1";
+            if (attendanceDate != null)  // Assuming attendanceDate is DateTime?
+            {
+                var encodedDate = Uri.EscapeDataString(attendanceDate.ToString("yyyy-MM-dd"));
+                url += $"&attendanceDate={encodedDate}";
+            }
+            await js.InvokeVoidAsync("open", url, "_blank");
+        }
+
+        // string baseUri = _navigation.BaseUri;
+        // string url = $"{baseUri}api/Reportss/GetEmpReport?reportType=2";
+        // if (!string.IsNullOrEmpty(empId))
+        // {
+        //     url += $"&empId={empId}";
+        // }
+        // await js.InvokeVoidAsync("open", url, "_blank");
+    }
+}
+
+
+

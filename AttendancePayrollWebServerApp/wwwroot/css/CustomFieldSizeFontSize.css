@@ -1,0 +1,37 @@
+﻿.custom-input {
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    font-size: 0.875rem;
+}
+
+.custom-input2 {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    font-size: 0.875rem;
+}
+
+.light-violet {
+    background-color: #E6E6FA; /* Light violet color */
+    color: #333; /* Text color */
+}
+/************************************************/
+
+.chart-container {
+    height: 100%;
+    overflow: hidden;
+    background-color: #fafafa;
+    border: 3px dashed #000000;
+    padding: 1.1rem 2rem 0 2rem;
+    max-width: 1100px;
+}
+
+@media (max-width: 1199.98px) {
+    .chart-container {
+        max-width: 100%;
+    }
+}
+
+
+
+
+

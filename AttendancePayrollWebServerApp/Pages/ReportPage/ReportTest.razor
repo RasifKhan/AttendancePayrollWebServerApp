@@ -1,0 +1,40 @@
+﻿@page "/reportPageTest"
+@inject IJSRuntime js
+@inject NavigationManager _navigation
+
+<h1>Rdlc Report</h1>
+<br>
+<input type="text" @bind="empId" placeholder="Employee Id" />
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportPDF">PDF1</button>
+<button id="btnGenerate" class="btn btn-primary" @onclick="OpenReportXLS">xls1</button>
+<br />
+
+
+@code {
+    private string? empId;
+
+    private async void OpenReportPDF()
+    {
+        string baseUri = _navigation.BaseUri;
+        string url = $"{baseUri}api/Reportss/GetEmpReport?reportType=1";
+        if (!string.IsNullOrEmpty(empId))
+        {
+            url += $"&empId={empId}";
+        }
+        await js.InvokeVoidAsync("open", url, "_blank");
+    }
+
+
+    private async void OpenReportXLS()
+    {
+        string baseUri = _navigation.BaseUri;
+        string url = $"{baseUri}api/Reportss/GetEmpReport?reportType=2";
+
+        if (!string.IsNullOrEmpty(empId))
+        {
+            url += $"&empId={empId}";
+        }
+        await js.InvokeVoidAsync("open", url, "_blank");
+    }
+
+}

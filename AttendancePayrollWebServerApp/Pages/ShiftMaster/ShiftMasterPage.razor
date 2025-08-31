@@ -1,0 +1,326 @@
+﻿@page "/shiftmasterpage"
+@using AttendancePayrollWebServerApp.Helper
+@inject ShiftMasterGateway _shiftMasterGateway
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+
+
+
+<div class="row my-0" style="height:5%;">
+    <div class="d-flex justify-content-between align-items-start" style="height:5%; width: 100%; margin-left: -12px;">
+        <h3 class="card-title text-primary mb-3 ml-3">@title Shift Type</h3>
+        @if (title != "Create")
+        {
+            <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" style="outline: none; width:auto;">
+                Add New Shift Master
+            </button>
+        }
+    </div>
+</div>
+
+
+
+<div class="row my-0">
+    <div class="col-10">
+        <EditForm Model="@ShiftMaster" OnValidSubmit="@UpsertShiftMaster">
+            <DataAnnotationsValidator />
+            <div class="row" style="width: 100%">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0" style="width:55%">
+                    <div class="col-10">
+                        <div class="col-12">
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       class="form-check-input custom-input"
+                                       name="shiftOption"
+                                       value="Shifting"
+                                       checked="@(selectedShiftOption == "Shifting")"
+                                       @onchange="OnShiftOptionChanged" />
+                                <label class="form-check-label">Shifting</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio"
+                                       class="form-check-input custom-input"
+                                       name="shiftOption"
+                                       value="General"
+                                       checked="@(selectedShiftOption == "General")"
+                                       @onchange="OnShiftOptionChanged" />
+                                <label class="form-check-label">General</label>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input">Shift Type</div>
+                        <div class="col-9">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text custom-input" style="background-color: #e9ecef;">@selectedShiftOption</span>
+                                </div>
+                                <InputText @bind-Value="userInput"
+                                           @oninput="OnUserInput"
+                                           class="form-control custom-input">
+                                </InputText>
+                            </div>
+                            <ValidationMessage For="()=>ShiftMaster.ShiftType"></ValidationMessage>
+                        </div>
+                    </div>
+
+                   @*  <button class="btn btn-primary custom-input" style="outline: none; margin-left: 145px; width:150px">@title</button> *@
+                </div>
+            </div>
+
+
+            <div class="row" style="width: 100%">
+                <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55%">
+                    <div class="row my-1 align-items-center">
+                        <div class="col-3 custom-input"></div>
+                        <div class="col-9">
+                            <button class="btn btn-primary custom-input" style="width: 150px;">@title</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+
+<div class="row my-1">
+    @if (ShiftsMasters != null && ShiftsMasters.Any())
+    {
+        <DxGrid @ref="GridExp"
+                Data="@ShiftsMasters"
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                PageSizeSelectorVisible="true"
+                PageSizeSelectorAllRowsItemVisible="true"
+                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                PageSize="8"
+                PagerPosition="GridPagerPosition.Bottom"
+                TextWrapEnabled="false"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                ShowSearchBox="true"
+                AutoExpandAllGroupRows="true"
+                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                SelectionMode="GridSelectionMode.Multiple"
+                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                FocusedRowEnabled="@isFocusedRowEnabled"
+                FocusedRowChanged="OnFocusedRowChanged"
+                RowClick="OnRowClick">
+            <Columns>
+                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                <DxGridDataColumn Caption="ShiftTypeMasterId" FieldName="ShiftTypeMasterId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Shift Type" FieldName="ShiftType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="ShiftTypeMasterId" />
+            </TotalSummary>
+        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+            <div class="text-center">
+                @* <img src="/images/Animation3.gif"> *@
+                 <img src="@($"{baseUrl}/images/Animation3.gif")">
+            </div>
+        }
+        else
+        {
+            <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code {
+    private bool IsLoading { get; set; }
+    private List<ShiftMaster> ShiftsMasters = new List<ShiftMaster>();
+    private ShiftMaster ShiftMaster { get; set; } = new ShiftMaster();
+    private string title { get; set; } = "Create";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private string selectedShiftOption { get; set; } = "Shifting";
+    private string userInput = "";
+    IGrid? GridExp { get; set; }
+    private string baseUrl;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            baseUrl = _navigationManager.BaseUri;
+            await LoadShiftMasterData();
+            UpdateShiftType();
+        }
+    }
+
+    private async Task LoadShiftMasterData()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        ShiftsMasters = await _shiftMasterGateway.GetShiftMasterList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadShiftDtId()
+    {
+        StateHasChanged();
+        ShiftMaster = await _shiftMasterGateway.GetShiftMaster(tempId);
+
+        // Extract the user input part when loading existing data
+        string shiftType = ShiftMaster.ShiftType;
+        if (shiftType.StartsWith("Shifting"))
+        {
+            selectedShiftOption = "Shifting";
+            userInput = shiftType.Substring("Shifting".Length);
+        }
+        else if (shiftType.StartsWith("General"))
+        {
+            selectedShiftOption = "General";
+            userInput = shiftType.Substring("General".Length);
+        }
+        else
+        {
+            selectedShiftOption = "Shifting";
+            userInput = shiftType;
+        }
+
+        StateHasChanged();
+    }
+
+    private void OnShiftOptionChanged(ChangeEventArgs e)
+    {
+        selectedShiftOption = e.Value?.ToString() ?? "Shifting";
+        UpdateShiftType();
+        StateHasChanged();
+    }
+
+    private void OnUserInput(ChangeEventArgs e)
+    {
+        userInput = e.Value?.ToString() ?? "";
+        UpdateShiftType();
+    }
+
+    private void UpdateShiftType()
+    {
+        // Remove any existing prefix
+        string userPart = userInput;
+        if (userInput.StartsWith("Shifting"))
+            userPart = userInput.Substring("Shifting".Length);
+        else if (userInput.StartsWith("General"))
+            userPart = userInput.Substring("General".Length);
+
+        // Set the new combined value
+        ShiftMaster.ShiftType = $"{selectedShiftOption}{userPart}";
+    }
+
+    private async Task UpsertShiftMaster()
+    {   
+
+        bool isExist = await _shiftMasterGateway.IsExist(ShiftMaster.ShiftType, ShiftMaster.ShiftTypeMasterId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("Shift Type already exists");
+            return;
+        }
+
+
+        if (title == "Create")
+        {
+            ShiftMaster = new ShiftMaster
+                {
+                    ShiftType = ShiftMaster.ShiftType
+                };
+            await _shiftMasterGateway.Save(ShiftMaster);
+            ShiftsMasters.Add(ShiftMaster);
+            await _jsRuntime.ToastrSuccess("Shift Type Created Successfully");
+            await LoadShiftMasterData();
+          //  await LoadShiftDtId();
+            ResetData();
+        }
+
+
+        if (title == "Update")
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                ShiftMaster = new ShiftMaster
+                    {
+                        ShiftTypeMasterId = tempId,
+                        ShiftType = ShiftMaster.ShiftType
+                    };
+                await _shiftMasterGateway.Edit(ShiftMaster);
+                ShiftsMasters.Add(ShiftMaster);
+                await LoadShiftMasterData();
+                await _jsRuntime.ToastrSuccess("Shift Type Updated Successfully");
+            }
+            else
+            {
+                await LoadShiftMasterData();
+            }
+        }
+    }
+
+    private void ResetData()
+    {
+        ShiftMaster = new ShiftMaster();
+        userInput = "";
+        selectedShiftOption = "Shifting";
+        UpdateShiftType();
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Create";
+        ResetData();
+        await LoadShiftMasterData();
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        var item = e.DataItem as ShiftMaster;
+        if (item != null)
+        {
+            tempId = item.ShiftTypeMasterId;
+        }
+
+        title = "Update";
+        await LoadShiftDtId();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                ExportSelectedRowsOnly = true
+            });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+@* **************************************************** *@
+
+

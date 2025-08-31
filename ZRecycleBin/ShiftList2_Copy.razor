@@ -1,0 +1,592 @@
+﻿@page "/shiftlist2"
+@using AttendancePayrollWebServerApp.Helper
+@inject ShiftGateway _shiftGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+
+<div class="row my-2">
+                <h3 class="card-title text-primary mb-3 ml-3"> Shift Page @temp</h3>
+        <div class="col-10">
+           <EditForm Model="@newShift" OnValidSubmit="@InsertShift">
+                    <DataAnnotationsValidator /> 
+
+            <div class="row" style="width: 100%"> 
+                @*  Upper Left Div begin------------------ *@
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+                   <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Shift Name</div>
+                               <div class="col-9">
+                            <InputText @bind-Value="newShift.ShiftName" class="form-control custom-input"></InputText>
+                                <ValidationMessage For="()=>newShift.ShiftName"></ValidationMessage>
+                        </div>
+                    </div>
+
+                     <div class="row my-1 align-items-center">
+                            <div class="col-3 custom-input">Shift Type</div>
+                                <div class="col-9">
+                                          <InputSelect @bind-Value="newShift.ShiftType" class="form-select custom-input">
+                                          <option value="0" disabled="disabled" selected> --Select Type--</option>
+                                          <option value="A shift">A shift</option>
+                                          <option value="B shift">B shift</option>
+                                          <option value="Night shift">Night shift</option>
+                                         </InputSelect>
+                                          <ValidationMessage For="()=>newShift.ShiftType"></ValidationMessage>
+                                 </div>
+                      </div>
+
+                      <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift In</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftInDateTime" />
+                                  </div>
+                            </div>
+
+                            <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift Out</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftOutDateTime" />
+                                  </div>
+                            </div>
+                          @* </EditForm> *@
+                     </div>
+                @* Upper Left Div Ended *@
+
+                    <div class="col-12 col-lg-1"></div>  @* Gap between left and right div *@
+
+                @* Upper Righ Div begin------------------ *@
+                    <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:45%">
+                              <div class="row my-1 align-items-center">
+                                 <div class="col-3 custom-input">Shift Late</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                         <input class="form-control custom-input" type="time" @bind="shiftLateDateTime" />
+                                  </div>
+                         </div>
+                         <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch In</div>
+                                        <div class="col-9">
+                                         <!-- Time input field -->
+                                             <input class="form-control custom-input" type="time" @bind="lunchInDateTime" />
+                                  </div>
+                         </div>
+                          <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch Out</div>
+                                            <div class="col-9">
+                                             <!-- Time input field -->
+                                                 <input class="form-control custom-input" type="time" @bind="lunchOutDateTime" />
+                                 </div>
+                          </div>
+                          <div class="row my-1 align-items-center">
+                                  <div class="col-3 custom-input">lunch Late</div>
+                                          <div class="col-9">
+                                          <!-- Time input field -->
+                                          <input class="form-control custom-input" type="time" @bind="lunchLateDateTime" />
+                                  </div>
+                          </div>
+                          </div>
+                    @* Upper Left Div Ended *@
+                            <button class="btn btn-primary custom-input" style="outline: none; margin-left: 116px; width:15%">Submit</button>
+                        </div>
+                  </EditForm> 
+    </div>
+</div>
+
+
+<div>
+    @if (shifts != null && shifts.Any())
+     {
+                <DxGrid @ref="GridExp"
+                Data="@shifts"
+                CssClass="mw-1100" 
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                ShowSearchBox="true"
+                AutoExpandAllGroupRows="true"
+                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                SelectionMode="GridSelectionMode.Multiple"
+                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+
+                 FocusedRowChanged="OnFocusedRowChanged"
+                FocusedRowEnabled="@isFocusedRowEnabled"
+                RowClick="OnRowClick"
+           
+                 
+
+                >
+                
+
+                
+             <Columns>
+                    <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                        <DxGridDataColumn Caption="Shift Name" FieldName="ShiftName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+                        <DxGridDataColumn Caption="Shift Type" FieldName="ShiftType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>
+            </Columns>
+            </DxGrid>
+
+
+     }
+    else
+    {
+        if (IsLoading)
+        {
+            //Loading gif
+                        <div class="text-center">
+                            <img src="/images/Glass spheres.gif">
+                        </div>
+        }
+
+        else
+        {
+            //no records
+                        <p>No Records Found.</p>
+        }
+    }
+</div>
+
+@code 
+{
+    //  FocusedRowChanged="OnFocusedRowChanged"
+    private bool IsLoading { get; set; }
+    private List<Shift> shifts;
+    private Shift newShift = new Shift();
+    private int temp { get; set; }
+    private int temp3 { get; set; }
+    private int temp2 { get; set; } = 0;
+
+
+    //private int temp = 0; // Holds the previous ShiftId
+    //private int temp2 = 0; // Holds the current ShiftId for comparison
+
+    private int count { get; set; } = 0;
+
+    private bool isFocusedRowEnabled { get; set; } = false;
+    private bool isRowClickSecondTime { get; set; } = false;
+
+
+    IGrid GridExp { get; set; }
+
+    DateTime datePart = DateTime.Parse("1900-01-01");
+    //shifIn  
+    private DateTime shiftInDateTime { get; set; } = DateTime.Today;
+    private TimeSpan shiftInToTime => shiftInDateTime.TimeOfDay;
+
+    //shifOut
+    private DateTime shiftOutDateTime { get; set; } = DateTime.Today;
+    public TimeSpan shiftOutToTime => shiftOutDateTime.TimeOfDay;
+
+    //shiftLate
+    private DateTime shiftLateDateTime { get; set; } = DateTime.Today;
+    private TimeSpan shiftLateToTime => shiftLateDateTime.TimeOfDay;
+
+    // lunchIn
+    private DateTime lunchInDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchInToTime => lunchInDateTime.TimeOfDay;
+
+    //lunchOut
+    private DateTime lunchOutDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchOutToTime => lunchOutDateTime.TimeOfDay;
+
+    //lunchLate
+    private DateTime lunchLateDateTime { get; set; } = DateTime.Today;
+    private TimeSpan lunchLateToTime => lunchLateDateTime.TimeOfDay;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadStocks();
+        }
+    }
+    private async Task LoadStocks()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        // Stocks = await _stockMtRepository.GetAll();
+        shifts = await _shiftGateway.GetShiftsList();
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task InsertShift()
+    {
+        DateTime combinedShiftInDateTime = datePart.Date.Add(shiftInToTime);
+        DateTime combinedShiftOutDateTime = datePart.Date.Add(shiftOutToTime);
+        DateTime combinedShiftLateDateTime = datePart.Date.Add(shiftLateToTime);
+
+        DateTime combinedlunchInDateTime = datePart.Date.Add(lunchInToTime);
+        DateTime combinedlunchOutDateTime = datePart.Date.Add(lunchOutToTime);
+        DateTime combinedlunchLateDateTime = datePart.Date.Add(lunchLateToTime);
+
+        Shift shift = new Shift
+            {
+                ShiftName = newShift.ShiftName,
+                ShiftType = newShift.ShiftType,
+
+                ShiftIn = combinedShiftInDateTime,
+                ShiftOut = combinedShiftOutDateTime,
+                ShiftLate = combinedShiftLateDateTime,
+
+                LunchIn = combinedlunchInDateTime,
+                LunchOut = combinedlunchOutDateTime,
+                LunchLate = combinedlunchLateDateTime
+            };
+        await _shiftGateway.Save(shift);
+        shifts.Add(shift);
+        await _jsRuntime.ToastrSuccess("Shift Created Successfully");
+        await LoadStocks();
+        newShift = new Shift();
+        shiftInDateTime = DateTime.Today;
+        shiftOutDateTime = DateTime.Today;
+        shiftLateDateTime = DateTime.Today;
+        lunchInDateTime = DateTime.Today;
+        lunchOutDateTime = DateTime.Today;
+        lunchLateDateTime = DateTime.Today;
+    }
+
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+
+
+    // private void OnAccordionItemClick(AccordionItemClickEventArgs e)
+    // {
+    //     // Enable FocusedRowEnabled when accordion item is clicked
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+    // private void OnRowClick(DevExpress.Blazor.DataGridRowClickEventArgs<Shift> e)
+    // {
+    //     var item = e.DataItem as Shift;
+    //     if (item != null)
+    //     {
+    //         temp2 = item.ShiftId;
+    //         if (temp == temp2)
+    //         {
+    //             // Logic when clicking the same row
+    //             Console.WriteLine("Clicked the same row again.");
+    //         }
+    //         else
+    //         {
+    //             temp = temp2; // Update temp to new ShiftId
+    //         }
+    //     }
+
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+
+    // private void OnRowClick(GridRowClickEventArgs e)
+    // {
+    //     var item = e.DataItem as Shift;
+    //     if (item != null)
+    //     {
+    //         temp2 = item.ShiftId;
+    //         if (temp == temp2)
+    //         {
+    //             // Logic when clicking the same row
+    //             Console.WriteLine("Clicked the same row again.");
+    //         }
+    //         else
+    //         {
+    //             temp = temp2; // Update temp to new ShiftId
+    //         }
+    //     }
+
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+
+    // private void OnRowClick(GridRowClickEventArgs e)
+    // {
+    //     var shiftId = (int)e.Key; // Get the ShiftId from the clicked row's key
+
+    //     var item = shifts.FirstOrDefault(s => s.ShiftId == shiftId); // Find the corresponding Shift object
+
+    //     if (item != null)
+    //     {
+    //         temp2 = item.ShiftId;
+    //         if (temp == temp2)
+    //         {
+    //             // Logic when clicking the same row
+    //             Console.WriteLine("Clicked the same row again.");
+    //         }
+    //         else
+    //         {
+    //             temp = temp2; // Update temp to new ShiftId
+    //         }
+    //     }
+
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+
+    // private void OnRowClick(GridRowClickEventArgs<Shift> e)
+    // {
+    //     var item = e.Data; // Get the clicked row's data (Shift object)
+
+    //     if (item != null)
+    //     {
+    //         temp2 = item.ShiftId;
+    //         if (temp == temp2)
+    //         {
+    //             // Logic when clicking the same row
+    //             Console.WriteLine("Clicked the same row again.");
+    //         }
+    //         else
+    //         {
+    //             temp = temp2; // Update temp to new ShiftId
+    //         }
+    //     }
+
+    //     isFocusedRowEnabled = true;
+    //     StateHasChanged(); // Trigger UI refresh
+    // }
+
+
+
+
+
+    // FocusedRowChanged handler
+    // private void OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    // {
+    //     var item = e.DataItem as Shift;
+    //     if (item != null)
+    //     {
+    //         temp = item.ShiftId;
+    //     }
+    // }
+
+
+
+
+    // private void DataGridRowClickEventArgs(DataGridRowClickEventArgs e)
+    // {
+
+    // }
+
+    // void OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    // {
+    //     // if (count == 0)
+    //     // {
+    //     //     count = 1;
+    //     //     return;
+    //     // }
+    //   var  item = e.DataItem as Shift;
+
+    //     if (item != null)
+    //     {
+    //         temp = item.ShiftId;
+    //         temp2 = temp;
+    //     }
+    //  //   isFocusedRowEnabled = false;
+
+    // }
+
+
+
+    // void OnRowClick(GridRowClickEventArgs e)
+    // {
+
+    //     if (!isRowClickSecondTime)
+    //     { 
+    //         isFocusedRowEnabled = true;
+    //     }
+    // }
+
+    // void OnRowClick(GridRowClickEventArgs<Shift> e)
+
+
+
+    ////////////--------------------
+    ///////////////////-----------------------
+
+    // void OnRowClick(GridRowClickEventArgs e)
+    // {
+
+    //    // var clickedItem = e.Grid as Shift;
+    //     //var clickedItem = e.Data as Shift;
+    //     if (!isRowClickSecondTime)
+    //     {
+    //         isFocusedRowEnabled = true;
+    //     }
+    // }
+
+    // void OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    // {
+    //     var t = e.Grid.AllowSelectRowByClick;
+    //     // if (count == 0)
+    //     // {
+    //     //     count = 1;
+    //     //     return;
+    //     // }
+    //     if (temp2 > 0)
+    //     {
+    //         var item2 = e.DataItem as Shift;
+    //         if (item2 != null)
+    //         {
+    //             temp3 = item2.ShiftId;
+    //         }
+    //         if (temp3 == temp2)
+    //         {
+    //             isFocusedRowEnabled = false;
+    //             temp2 = 0;
+    //         }
+    //     }
+
+
+    //     if (temp2 == 0)
+    //     {
+    //         var item = e.DataItem as Shift;
+
+    //         if (item != null)
+    //         {
+    //             temp = item.ShiftId;
+    //             temp2 = temp;
+    //         }
+    //     }
+    // }
+
+
+
+
+
+    //--------------------------------
+    //-------------------------------------------------------
+
+
+    // void OnRowClick(GridRowClickEventArgs e)
+    // {
+    //     var visibleIndex = e.VisibleIndex;
+
+    //     if (visibleIndex >= 0 && visibleIndex < shifts.Count)
+    //     {
+    //         var clickedItem = shifts[visibleIndex]; // Access the clicked row data using the visible index
+
+    //         if (clickedItem != null)
+    //         {
+    //             if (clickedItem.ShiftId == temp) // If the same row is clicked again
+    //             {
+    //                 isRowClickSecondTime = true;
+    //                 Console.WriteLine("Clicked the same row again.");
+    //                 // Handle any logic specific to clicking the same row
+    //             }
+    //             else
+    //             {
+    //                 temp = clickedItem.ShiftId; // Update to the new ShiftId
+    //                 isRowClickSecondTime = false; // Reset the flag for new row
+    //             }
+
+    //             isFocusedRowEnabled = true; // Ensure FocusedRow is enabled
+    //             StateHasChanged(); // Trigger UI update
+    //         }
+    //     }
+    // }
+
+
+    // // Handle focus change
+    // void OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    // {
+    //     var focusedItem = e.DataItem as Shift;
+
+    //     if (focusedItem != null)
+    //     {
+    //         if (isRowClickSecondTime && focusedItem.ShiftId == temp2)
+    //         {
+    //             // Prevent focus logic for the same row click
+    //             isFocusedRowEnabled = false;
+    //         }
+    //         else
+    //         {
+    //             temp2 = focusedItem.ShiftId; // Update the focused row ShiftId
+    //         }
+    //     }
+    // }
+
+
+
+    //*********************************************
+    // **********************************************/
+
+
+
+
+    private int? selectedShiftId = null;
+    // RowClick handler
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        var visibleIndex = e.VisibleIndex;
+
+        if (visibleIndex >= 0 && visibleIndex < shifts.Count)
+        {
+            var clickedItem = shifts[visibleIndex]; // Access the clicked row data using the visible index
+
+            if (clickedItem != null)
+            {
+                if (selectedShiftId == clickedItem.ShiftId) // If the same row is clicked again
+                {
+                    selectedShiftId = null; // Deselect the row
+                    GridExp.ClearSelection(); // Clear the grid selection
+                  ///  GridExp.ClearFocusedRow(); // Clear the focused row
+                }
+                else
+                {
+                    selectedShiftId = clickedItem.ShiftId; // Select the new row
+                }
+
+                StateHasChanged(); // Trigger UI update
+            }
+        }
+    }
+
+    // Handle focus change
+    void OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        var focusedItem = e.DataItem as Shift;
+
+        if (focusedItem != null)
+        {
+            selectedShiftId = focusedItem.ShiftId; // Update the focused row ShiftId
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}

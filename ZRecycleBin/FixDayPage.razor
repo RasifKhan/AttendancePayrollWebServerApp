@@ -1,0 +1,290 @@
+﻿@page "/fixdaypage"
+@using AttendancePayrollWebServerApp.Helper
+@inject FixDayGateway _fixDayGateway
+@inject IJSRuntime _jsRuntime
+<link rel="stylesheet" href="/css/CustomFieldSizeFontSize.css">
+
+<div class="row my-0">
+          <div class="d-flex justify-content-between align-items-start" style="height:5% ; width: 100; margin-left: -12px; ">
+                <h3 class="card-title text-primary mb-3 ml-3" >@title Fix Day</h3>
+        @if (title != "Entry")
+        {
+                                <button type="button" class="btn btn-primary custom-input" @onclick="@AddNew" 
+                                        style="outline: none; width:auto;">
+                                    Add New Fix Day
+                                </button>
+        }
+                  </div>
+
+              <div class="col-10"  >
+                  <EditForm Model="@fixDay" OnValidSubmit="@UpsertFixDay">
+                    <DataAnnotationsValidator /> 
+                   <div class="row" style="width: 100% "> 
+                   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:55% "  >
+                      
+                              <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">From Date</div>
+                                                                <div class="col-9">
+                                                                            <InputDate @bind-Value="fixDay.FixDateFrom" class="form-control custom-input2" @onchange="OnFromDateChanged" ></InputDate>
+                                                                            @*   <InputDate @bind-Value="fixDay.FixDateFrom" class="form-control custom-input2" @bind-Value:after="OnFromDateChanged"></InputDate>  *@
+                                                                </div>
+                             </div>
+
+                              <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">To Date</div>
+                                                                <div class="col-9">
+                                                                            <InputDate @bind-Value="fixDay.FixDateTo" class="form-control custom-input2"  ></InputDate>
+                                                                </div>
+                             </div>
+
+                              <div class="row my-1 align-items-center">
+                           <div class="col-3 custom-input">Type</div>
+                               <div class="col-9">
+                           <InputSelect @bind-Value="fixDay.FixType" class="form-select custom-input2 light-violet">
+                                                            <option value="0" disabled="disabled" selected> --Select Type--</option>
+                                                            <option value="GD">GD</option>
+                                                            <option value="HD">HD</option>
+                                                             <option value="WHD">WHD</option>
+                                                            </InputSelect>
+                                <ValidationMessage For="()=>fixDay.FixType"></ValidationMessage>
+                                </div>
+                           </div>
+                             <div class="row my-1 align-items-center">
+                                                                <div class="col-3 custom-input2">Remarks</div>
+                                                                <div class="col-9">
+                                                                            <InputText @bind-Value="fixDay.FixRemarks" class="form-control custom-input2"  ></InputText>
+                                                                            <ValidationMessage For="()=>fixDay.FixRemarks"></ValidationMessage>
+                                                                </div>
+                             </div>
+                     <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 145px;  width:150px" >@title</button>  
+
+                </div>
+                </div>
+           </EditForm> 
+    </div>
+</div>
+
+
+
+<div class="row my-1"> 
+
+    @if (fixDays != null && fixDays.Any())
+    {
+                                <DxGrid @ref="GridExp"
+                                Data="@fixDays"
+                                ShowGroupPanel="true"
+                                ShowFilterRow="true"
+                                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                                PageSizeSelectorVisible="true"
+                                PageSizeSelectorAllRowsItemVisible="true"
+                                PageSizeSelectorItems="@(new int[] { 5,8,10,15, 20 })"
+                                PageSize="8" 
+                                PagerPosition="GridPagerPosition.Bottom"
+                                TextWrapEnabled="false"
+                                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                                ShowSearchBox="true"
+                                AutoExpandAllGroupRows="true"
+                                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                                FocusedRowEnabled="@isFocusedRowEnabled" FocusedRowChanged="OnFocusedRowChanged"
+                                RowClick="OnRowClick"
+                               >
+                             <Columns >
+                                    <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                                                         <DxGridDataColumn Caption="From Date" FieldName="FixDateFrom" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                                          <DxGridDataColumn Caption="To Date" FieldName="FixDateTo" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                                         <DxGridDataColumn Caption="Type" FieldName="FixType" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                                                         <DxGridDataColumn Caption="Remarks" FieldName="FixRemarks" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending"/>  
+                            </Columns>                    
+                                    <TotalSummary>
+                                            <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="FixType" />
+                                    </TotalSummary>
+                            </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+                                <div class="text-center">
+                                        <img src="/images/Glass spheres.gif">
+                                </div>
+        }
+        else
+        {
+                                   <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+@code
+{
+    private bool IsLoading { get; set; }
+    private List<FixDay> fixDays = new List<FixDay>();
+
+    private FixDay fixDay { get; set; } = new FixDay();
+    //private int count { get; set; } = 0;
+    private string title { get; set; } = "Entry";
+    private int tempId { get; set; } = 0;
+    private bool isFocusedRowEnabled { get; set; } = false;
+    IGrid? GridExp { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            fixDay.FixDateFrom = DateTime.Today;
+            fixDay.FixDateTo = DateTime.Today;
+            await LoadFixDay();
+        }
+    }
+
+    private async Task LoadFixDay()
+    {
+        IsLoading = true;
+        StateHasChanged();
+        fixDays = await _fixDayGateway.GetFixDayList();
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadFixDayById()
+    {
+        StateHasChanged();
+        fixDay = await _fixDayGateway.GetFixDay(tempId);
+      
+        StateHasChanged();
+    }
+
+    private async Task UpsertFixDay()
+    {
+        bool isExist = await _fixDayGateway.IsExist(fixDay.FixDateFrom, fixDay.FixDayId);
+        if (isExist)
+        {
+            await _jsRuntime.ToastrError("The Date already exists");
+            return;
+        }
+
+        if (title == "Entry")
+        {
+            fixDay = new FixDay
+                {
+                    FixDateFrom = fixDay.FixDateFrom,
+                    FixDateTo = fixDay.FixDateTo,
+                    FixType = fixDay.FixType,
+                    FixRemarks = fixDay.FixRemarks,
+
+                    Addedby = 0,
+                    AddedDate = Convert.ToDateTime("1900 - 01 - 01"),
+                    EditedBy = 0,
+                    EditedDate = Convert.ToDateTime("1900 - 01 - 01")
+
+                };
+            await _fixDayGateway.Save(fixDay);
+            fixDays.Add(fixDay);
+            await _jsRuntime.ToastrSuccess("Fixed Successfully");
+            await LoadFixDay();
+            await LoadFixDayById();
+            ResetData();
+        }
+
+        else
+        {
+            var confirmed = await _jsRuntime.InvokeAsync<bool>("confirmUpdate", "Are you sure you want to update?");
+            if (confirmed)
+            {
+                // Update the fixDay if confirmed
+                fixDay = new FixDay
+                    {
+                        FixDayId = tempId,
+
+                        FixDateFrom = fixDay.FixDateFrom,
+                        FixDateTo = fixDay.FixDateTo,
+                        FixType = fixDay.FixType,
+                        FixRemarks = fixDay.FixRemarks,
+                        Addedby = 0,
+                        AddedDate = Convert.ToDateTime("1900 - 01 - 01"),
+                        EditedBy = 0,
+                        EditedDate = Convert.ToDateTime("1900 - 01 - 01")
+                    };
+                await _fixDayGateway.Edit(fixDay);
+                fixDays.Add(fixDay);
+                await LoadFixDay();
+                await _jsRuntime.ToastrSuccess("Updated Successfully");
+            }
+            else
+            {
+                await LoadFixDay();
+            }
+        }
+    }
+
+
+    private void OnFromDateChanged()
+    {
+        fixDay.FixDateTo = fixDay.FixDateFrom;
+        StateHasChanged();
+    }
+
+
+    // private void OnFromDateChanged(ChangeEventArgs e)
+    // {
+    //     if (DateTime.TryParse(e.Value.ToString(), out DateTime newFromDate))
+    //     {
+    //         fixDay.FixDateTo = newFromDate;
+    //     }
+    // }
+
+    private void ResetData()
+    {
+        fixDay = new FixDay();
+        fixDay.FixDateFrom = DateTime.Today;
+        fixDay.FixDateTo = DateTime.Today;
+    }
+
+    private async Task AddNew()
+    {
+        isFocusedRowEnabled = false;
+        title = "Entry";
+        //fixDay.FixDate = DateTime.Today;
+        ResetData();
+        await LoadFixDay();
+
+        //  await _jsRuntime.InvokeVoidAsync("clearSessionData");
+    }
+
+    void OnRowClick(GridRowClickEventArgs e)
+    {
+        isFocusedRowEnabled = true;
+        StateHasChanged();
+
+    }
+
+    async Task OnFocusedRowChanged(GridFocusedRowChangedEventArgs e)
+    {
+        //     if (count == 0)
+        //     {
+        //         count = 1;
+        //         return;
+        //     }
+
+        var item = e.DataItem as FixDay;
+        if (item != null)
+        {
+            tempId = item.FixDayId;
+        }
+
+        title = "Update";
+        await LoadFixDayById();
+    }
+
+    async Task ExportXlsx_Click()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+}

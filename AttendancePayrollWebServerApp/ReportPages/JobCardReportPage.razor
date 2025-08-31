@@ -1,0 +1,318 @@
+﻿@page "/jobcardreportpage"
+
+@using DevExpress.Export
+@using AttendancePayrollWebServerApp.Gateway.View
+@using AttendancePayrollWebServerApp.Helper
+@using AttendancePayrollWebServerApp.Models
+@using AttendancePayrollWebServerApp.Models.View
+@inject AttendanceViewGateway _attendanceViewGateway
+@inject EmployeeGateway _employeeGateway
+
+@inject DepartmentGateway _departmentGateway
+@inject SectionGateway _sectionGateway
+@inject DesignationGateway _designationGateway
+
+@inject IJSRuntime _jsRuntime
+@inject NavigationManager _navigationManager
+
+@attribute [Authorize(Policy = UserPolicy.VIEW_PRODUCT)]
+
+
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomFieldSizeFontSize.css")">
+<link rel="stylesheet" href="@($"{baseUrl}css/CustomGridHeightwidth.css")">
+
+<div class="row my-0" style="height:5% ; ">
+    <div class="d-flex justify-content-between align-items-start" style="height:5% ;  margin-left: -12px; ">
+        <h3 class="card-title text-primary mb-3 ml-3">Job Card </h3>
+         @*    <button type="button" class="btn btn-primary btn-success custom-input" @onclick="ExportXlsx_Click " style="outline: none; width:auto;">Export To Excel</button> *@
+    </div>
+</div>
+
+
+
+<div class="row my-0">
+    <div class="col-10">
+        <div class="row" style="width: 100% ">
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:50%">
+
+                @*   <div class="row my-1 align-items-center">
+                    <div class="col-3 custom-input2">Employee Id</div>
+                    <div class="col-9">
+                        <select class="form-select custom-input light-violet"
+                                @bind="empId">
+                            <option value="" disabled selected>-- Select --</option>
+                            @foreach (var item in employees)
+                            {
+                                <option value="@item.EmployeeId">@item.EmployeeId</option>
+                            }
+                        </select>
+                    </div>
+                </div>   *@
+
+                <div class="row my-1 align-items-center">
+                    <div class="col-3 custom-input">From Date</div>
+                    <div class="col-9">
+                        <input type="date" id="fromDate"
+                               class="form-control custom-input @(isFromDateValid ? "" : "is-invalid")"
+                               @bind="fromDate"
+                               @bind:event="oninput"
+                               @onchange="ValidateFromDate" />
+                        @if (!isFromDateValid)
+                        {
+                            <div class="invalid-feedback">
+                                Please enter a valid date.
+                            </div>
+                        }
+                    </div>
+               
+                    <div class="col-3 custom-input">To Date</div>
+                    <div class="col-9">
+                        <input type="date" id="toDate"
+                               class="form-control custom-input @(isToDateValid ? "" : "is-invalid")"
+                               @bind="toDate"
+                               @bind:event="oninput"
+                               @onchange="ValidateToDate" />
+                        @if (!isToDateValid)
+                        {
+                            <div class="invalid-feedback">
+                                Please enter a valid date.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+         
+
+      @*   <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:50%">
+               <div class="row my-0 align-items-center">
+                    <div class="col-9">
+                    <button class="btn btn-primary custom-input" style="outline: none;  margin-left: 120px;  width:150px" @onclick="ExecuteReport">View Report (PDF)</button>
+                    </div>
+              </div>
+        </div> *@
+
+
+        <div class="row" style="width: 100% ">
+            <div class="col-12 col-lg-8 p-0 ml-4 ml-md-0 mt-4 mt-md-0 " style="width:50%">
+                <div class="row my-1 align-items-center">
+                    <div class="col-3 custom-input"></div>
+                    <div class="col-9">
+
+                         <AuthorizeView Policy="@UserPolicy.EDIT_PRODUCT">
+                                <Authorized Context="authContext">
+                        <button class="btn btn-primary custom-input" style=" width:150px" @onclick="ExecuteReport">View Report (PDF)</button>
+                       @*  <button class="btn btn-primary custom-input" style="width: 150px;">@title</button> *@
+                            </Authorized>
+                        </AuthorizeView>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+<div class="row my-1">
+    @if (employees != null && employees.Any())
+    {
+        <DxGrid @ref="GridExp"
+                Data="@employees"
+                ShowGroupPanel="true"
+                ShowFilterRow="true"
+                ColumnResizeMode="GridColumnResizeMode.NextColumn"
+                CustomizeCellDisplayText="Grid_CustomizeCellDisplayText"
+                PageSizeSelectorVisible="true"
+                PageSizeSelectorAllRowsItemVisible="true"
+                PageSizeSelectorItems="@(new int[] { 5,8,10,12,15, 20 })"
+                PageSize="50"
+                PagerPosition="GridPagerPosition.Bottom"
+                TextWrapEnabled="false"
+                FilterMenuButtonDisplayMode="GridFilterMenuButtonDisplayMode.Always"
+                ShowSearchBox="true"
+                AutoExpandAllGroupRows="true"
+                GroupFooterDisplayMode="GridGroupFooterDisplayMode.IfExpanded"
+                SelectionMode="GridSelectionMode.Multiple"
+                SelectAllCheckboxMode="GridSelectAllCheckboxMode.AllPages"
+                >
+            <Columns>
+                <DxGridSelectionColumn Width="60px" AllowSelectAll="true" />
+                <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId"  />
+                <DxGridDataColumn Caption="Name" FieldName="EmployeeName"  />
+                <DxGridDataColumn Caption="Department" FieldName="DepartmentId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Section" FieldName="SectionId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Designation" FieldName="DesignationId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Active" FieldName="ActiveYN" />
+                <DxGridDataColumn Caption="Join Date" FieldName="JoinDate"  DisplayFormat="dd-MMM-yyyy" />
+
+@* 
+                <DxGridDataColumn Caption="Employee Id" FieldName="EmployeeId" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Name" FieldName="EmployeeName" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Department" FieldName="DepartmentId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Section" FieldName="SectionId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Designation" FieldName="DesignationId" SortMode="GridColumnSortMode.DisplayText" FilterMode="GridColumnFilterMode.DisplayText" TextAlignment="GridTextAlignment.Left" />
+                <DxGridDataColumn Caption="Active" FieldName="ActiveYN" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" />
+                <DxGridDataColumn Caption="Join Date" FieldName="JoinDate" SortIndex="0" SortOrder="GridColumnSortOrder.Ascending" DisplayFormat="dd-MMM-yyyy" /> *@
+            </Columns>
+            <TotalSummary>
+                <DxGridSummaryItem SummaryType="GridSummaryItemType.Count" FieldName="EmployeeId" />
+            </TotalSummary>
+        </DxGrid>
+    }
+    else
+    {
+        if (IsLoading)
+        {
+
+            <div class="text-center">
+                @*  <img src="/images/Animation3.gif"> *@
+                <img src="@($"{baseUrl}/images/Animation3.gif")">
+            </div>
+        }
+
+        else
+        {
+
+            <p>No Records Found.</p>
+        }
+    }
+</div>
+
+
+@code {
+    private DateTime toDate = DateTime.Today;
+    private DateTime fromDate = DateTime.Today;
+   // private string empId = string.Empty;
+    private bool IsLoading { get; set; }
+    private string baseUrl;
+    IGrid? GridExp { get; set; }
+    private List<Employee> employees = new List<Employee>();
+    private List<Department> DepartmentList = new List<Department>();
+    private List<Section> SectionList = new List<Section>();
+    private List<Designation> DesignationList = new List<Designation>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            IsLoading = true;
+            baseUrl = _navigationManager.BaseUri;
+            StateHasChanged();
+            employees = await _employeeGateway.GetEmployeeList();
+            DepartmentList = await _departmentGateway.GetDepartmentsList();
+            SectionList = await _sectionGateway.GetSectionList();
+            DesignationList = await _designationGateway.GetDesignationList();
+            IsLoading = false;
+            StateHasChanged();
+        }
+    }
+
+
+
+    // private async Task ExecuteReport()
+    // {
+    //   //
+    //     List<Employee> selectedRowsList = GridExp?.SelectedDataItems?.Cast<Employee>().ToList() ?? new List<Employee>();
+    //     List<string> selectedEmployee = selectedRowsList.Select(item => item.EmployeeId).ToList();
+    //     string employeeIdString = "'" + String.Join("','", selectedEmployee) + "'";
+    //     await _attendanceViewGateway.ExecuteJobCardProc(fromDate, toDate, employeeIdString);
+    // }
+
+
+
+    private async Task ExecuteReport()
+    {
+        List<Employee> selectedRowsList = GridExp?.SelectedDataItems?.Cast<Employee>().ToList() ?? new List<Employee>();
+        List<string> selectedEmployee = selectedRowsList.Select(item => item.EmployeeId).ToList();
+        await _attendanceViewGateway.InsertEmployeeIdsAsync(selectedEmployee);
+        await _attendanceViewGateway.ExecuteJobCardProc(fromDate, toDate);
+
+        string url = $"{baseUrl}api/Reportss/GetJobCardReport?reportType=1";
+        if (fromDate != null && toDate != null)
+            {
+                var encodedFromDate = Uri.EscapeDataString(fromDate.ToString("yyyy-MM-dd"));
+                var encodedToDate = Uri.EscapeDataString(toDate.ToString("yyyy-MM-dd"));
+                url += $"&fromDate={encodedFromDate}&toDate={encodedToDate}";
+            }
+            await _jsRuntime.InvokeVoidAsync("open", url, "_blank");
+
+    }
+
+
+
+    //  private async Task ExecuteReport()
+    // {
+       
+    //             string url = $"{baseUrl}api/Reportss/GetJobCardReport?reportType=1";
+    //             if (fromDate != null && toDate != null)
+    //             {
+    //             var encodedFromDate = Uri.EscapeDataString(fromDate.ToString("yyyy-MM-dd"));
+    //             var encodedToDate = Uri.EscapeDataString(toDate.ToString("yyyy-MM-dd"));
+    //             url += $"&fromDate={encodedFromDate}&toDate={encodedToDate}&employeeId={empId}";
+    //             }
+    //             await _jsRuntime.InvokeVoidAsync("open", url, "_blank");
+    // }
+
+
+    private bool isFromDateValid = true;
+    private void ValidateFromDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            fromDate == DateTime.MinValue ||
+            fromDate.Year < 1900)
+        {
+            isFromDateValid = false;
+        }
+        else
+        {
+            isFromDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+
+    private bool isToDateValid = true;
+
+    private void ValidateToDate(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e.Value?.ToString()) ||
+            toDate == DateTime.MinValue ||
+            toDate.Year < 1900)
+        {
+            isToDateValid = false;
+        }
+        else
+        {
+            isToDateValid = true;
+        }
+        StateHasChanged();
+    }
+
+
+    void Grid_CustomizeCellDisplayText(GridCustomizeCellDisplayTextEventArgs e)
+    {
+        if (e.FieldName == "DepartmentId")
+        {
+            e.DisplayText = DepartmentList.Where(c => c.DepartmentId == (int)e.Value).First().DepartmentName;
+        }
+
+        if (e.FieldName == "SectionId")
+        {
+            e.DisplayText = SectionList.Where(c => c.SectionId == (int)e.Value).First().SectionName;
+        }
+
+        if (e.FieldName == "DesignationId")
+        {
+            e.DisplayText = DesignationList.Where(c => c.DesignationId == (int)e.Value).First().DesignationName;
+        }
+    }
+
+    // async Task ExportXlsx_Click()
+    // {
+      
+    // }
+
+}
