@@ -120,6 +120,21 @@
         }
         // Delete department logic
     }
+
+    //Git test
+
+    private async Task DeleteDepartment222()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst("UserAccountId");
+        if (userIdClaim == null || !await PermissionService.HasPermissionAsync(userIdClaim.Value, "departmentpage", UserPolicy.DELETE_PRODUCT))
+        {
+            await _jsRuntime.InvokeVoidAsync("alert", "You do not have permission to delete a department.");
+            return;
+        }
+        // Delete department logic
+    }
 }
 
 
