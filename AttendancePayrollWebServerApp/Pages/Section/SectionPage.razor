@@ -269,4 +269,18 @@
                 ExportSelectedRowsOnly = true
             });
     }
+
+
+
+
+
+    async Task ExportXlsx_Click_git_test()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+
 }
