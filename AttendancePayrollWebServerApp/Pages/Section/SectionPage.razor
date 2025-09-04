@@ -285,6 +285,19 @@
 
 
 
+    //NewlyAdded code for testing git
+
+    async Task ExportXlsx_Click_From_git_pull_toTeamRequest()
+    {
+        await GridExp.ExportToXlsxAsync("ExportResult", new GridXlExportOptions()
+            {
+                //ExportSelectedRowsOnly = ExportSelectedRowsOnly
+                ExportSelectedRowsOnly = true
+            });
+    }
+
+
+
 
 
 }
